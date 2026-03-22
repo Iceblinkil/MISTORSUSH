@@ -1,5 +1,6 @@
 let cart = {}; 
 let currentLang = localStorage.getItem('lang') || 'ru';
+let currentCategoryView = 0;
 
 const i18n = {
     ru: {
@@ -129,7 +130,7 @@ function toggleLang() {
     localStorage.setItem('lang', currentLang);
     applyLanguage();
     renderNav();
-    renderMenu();
+    selectCategory(currentCategoryView);
     updateCartWidget();
     if (!document.getElementById('cartModal').classList.contains('opacity-0')) renderCartModalItems();
     if (!document.getElementById('checkoutModal').classList.contains('opacity-0')) updateCheckoutSummary();
@@ -138,78 +139,135 @@ function toggleLang() {
 function init() {
     applyLanguage();
     renderNav();
-    renderMenu();
+    renderDrawer();
+    selectCategory(0);
     updateCartWidget();
-    observeCategories();
 }
 
 function renderNav() {
     const nav = document.getElementById('categoryNav');
-    nav.innerHTML = menuData.map((cat, index) => `
-        <a href="#cat-${index}" class="category-link whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-colors duration-200 ${index===0 ? 'text-brand border-brand/30 bg-brand/10' : 'text-muted border-white/5 bg-card hover:bg-white/5'}">
+    nav.innerHTML = menuData.map((cat, index) => {
+        const isActive = index === currentCategoryView;
+        const activeClass = isActive ? 'text-brand border-brand/30 bg-brand/10' : 'text-muted border-white/5 bg-card hover:bg-white/5';
+        return `
+        <button onclick="selectCategory(${index})" class="category-link whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-colors duration-200 ${activeClass}">
             ${currentLang === 'en' ? cat.categoryEn : cat.category}
-        </a>
-    `).join('');
+        </button>
+        `;
+    }).join('');
 }
 
 function renderMenu() {
     const container = document.getElementById('menuContainer');
-    container.innerHTML = menuData.map((cat, index) => {
-        const isClassic = index === 0;
-        const cardBgColor = isClassic ? 'bg-[#12141a]' : 'bg-[#1c1814]';
-        const cardBorderColor = isClassic ? 'border-[#1e2330]' : 'border-[#2e2620]';
+    const cat = menuData[currentCategoryView];
+    if (!cat) return;
 
-        return `
-        <section id="cat-${index}" class="scroll-mt-6 menu-section">
+    const isClassic = currentCategoryView === 0;
+    const cardBgColor = isClassic ? 'bg-[#12141a]' : 'bg-[#1c1814]';
+    const cardBorderColor = isClassic ? 'border-[#1e2330]' : 'border-[#2e2620]';
+
+    if (cat.items.length === 0) {
+        container.innerHTML = `
+        <section id="cat-${currentCategoryView}" class="menu-section animate-fade-in">
             <h2 class="text-2xl font-bold mb-6 tracking-tight text-white/95 flex items-center justify-center gap-4 text-center uppercase text-[22px]">
                 <div class="h-px bg-white/10 flex-grow"></div>
                 ${currentLang === 'en' ? cat.categoryEn : cat.category}
                 <div class="h-px bg-white/10 flex-grow"></div>
             </h2>
-            
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                ${cat.items.map(item => `
-                    <div class="product-card flex flex-col justify-between ${cardBgColor} p-4 rounded-2xl border ${cardBorderColor} shadow-lg shadow-black/30">
-                        <div class="mb-3">
-                            <h3 class="font-bold text-[17px] leading-snug mb-1.5 text-white/95">${currentLang === 'en' ? item.nameEn : item.name}</h3>
-                            <p class="text-xs text-muted leading-relaxed line-clamp-3">${currentLang === 'en' ? item.ingredientsEn : item.ingredients}</p>
-                        </div>
-                        <div class="flex justify-between items-center pt-3 border-t border-white/5 mt-auto">
-                            <span class="font-bold text-lg text-brand">${item.price}₪</span>
-                            <div class="cart-controls" id="controls-${item.id}">
-                                <button class="bg-brand text-white w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition shadow-lg shadow-brand/30" onclick="addToCart('${item.id}')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
+            <div class="text-center py-16 text-muted bg-card/50 rounded-2xl border border-white/5 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto mb-3 opacity-20"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <p class="font-medium tracking-wider text-sm uppercase">Пока пусто</p>
+                <p class="text-xs opacity-50 mt-1">Скоро мы добавим сюда товары</p>
             </div>
         </section>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+    <section id="cat-${currentCategoryView}" class="menu-section animate-fade-in">
+        <h2 class="text-2xl font-bold mb-6 tracking-tight text-white/95 flex items-center justify-center gap-4 text-center uppercase text-[22px]">
+            <div class="h-px bg-white/10 flex-grow"></div>
+            ${currentLang === 'en' ? cat.categoryEn : cat.category}
+            <div class="h-px bg-white/10 flex-grow"></div>
+        </h2>
+        
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            ${cat.items.map(item => `
+                <div class="product-card flex flex-col justify-between ${cardBgColor} p-4 rounded-2xl border ${cardBorderColor} shadow-lg shadow-black/30">
+                    <div class="mb-3">
+                        <h3 class="font-bold text-[17px] leading-snug mb-1.5 text-white/95">${currentLang === 'en' ? item.nameEn : item.name}</h3>
+                        <p class="text-xs text-muted leading-relaxed line-clamp-3">${currentLang === 'en' ? item.ingredientsEn : item.ingredients}</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-white/5 mt-auto">
+                        <span class="font-bold text-lg text-brand">${item.price}₪</span>
+                        <div class="cart-controls" id="controls-${item.id}">
+                            <button class="bg-brand text-white w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition shadow-lg shadow-brand/30" onclick="addToCart('${item.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </section>
+    `;
+}
+
+function renderDrawer() {
+    const container = document.getElementById('drawerLinks');
+    if (!container) return;
+    
+    container.innerHTML = menuData.map((cat, index) => {
+        const isActive = index === currentCategoryView;
+        const activeClass = isActive ? 'bg-brand/10 text-brand border-brand/30' : 'bg-transparent text-white/80 border-transparent hover:bg-white/5';
+        return `
+        <button onclick="selectCategory(${index})" class="w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 flex items-center justify-between group ${activeClass}">
+            <span class="font-semibold text-sm tracking-wide uppercase">${currentLang === 'en' ? cat.categoryEn : cat.category}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 ${isActive ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 group-hover:translate-x-1 transition-all"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
         `;
     }).join('');
 }
 
-function observeCategories() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const navLinks = document.querySelectorAll('.category-link');
-                navLinks.forEach(a => {
-                    a.classList.remove('text-brand', 'border-brand/30', 'bg-brand/10');
-                    a.classList.add('text-muted', 'border-white/5', 'bg-card');
-                });
-                
-                const activeLink = document.querySelector(`#categoryNav a[href="#${entry.target.id}"]`);
-                if(activeLink) {
-                    activeLink.classList.remove('text-muted', 'border-white/5', 'bg-card');
-                    activeLink.classList.add('text-brand', 'border-brand/30', 'bg-brand/10');
-                }
-            }
-        });
-    }, { rootMargin: '-320px 0px -50% 0px' });
+function selectCategory(index) {
+    currentCategoryView = index;
+    renderNav();
+    renderMenu();
+    renderDrawer();
+    closeDrawer();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openDrawer() {
+    const drawer = document.getElementById('navDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const content = document.getElementById('drawerContent');
+    if(!drawer) return;
     
-    document.querySelectorAll('.menu-section').forEach(sec => observer.observe(sec));
+    drawer.classList.remove('pointer-events-none');
+    overlay.classList.remove('opacity-0', 'pointer-events-none');
+    overlay.classList.add('opacity-100', 'pointer-events-auto');
+    
+    content.classList.remove('-translate-x-full');
+}
+
+function closeDrawer() {
+    const drawer = document.getElementById('navDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const content = document.getElementById('drawerContent');
+    if(!drawer) return;
+    
+    overlay.classList.remove('opacity-100', 'pointer-events-auto');
+    overlay.classList.add('opacity-0', 'pointer-events-none');
+    
+    content.classList.add('-translate-x-full');
+    
+    setTimeout(() => {
+        if(overlay.classList.contains('opacity-0')) {
+            drawer.classList.add('pointer-events-none');
+        }
+    }, 300);
 }
 
 function getItem(id) {

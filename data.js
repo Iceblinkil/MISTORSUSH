@@ -32,5 +32,10 @@ const menuData = [
       { id: "p10", name: "Креветка панко", nameEn: "Shrimp Panko", price: 45, ingredients: "Рис, нори, креветка, сливочный сыр, салат зеленый, панировочные сухари", ingredientsEn: "Rice, nori, shrimp, cream cheese, green lettuce, breadcrumbs", image: "img/baked_sushi_roll.png" },
       { id: "p11", name: "Филадельфия с соломоном", nameEn: "Philadelphia with Salmon", price: 50, ingredients: "Рис, нори, кремчиз, соломон, огурец", ingredientsEn: "Rice, nori, cream cheese, salmon, cucumber", image: "img/baked_sushi_roll.png" }
     ]
+  },
+  {
+    category: "Напитки",
+    categoryEn: "Drinks",
+    items: []
   }
 ];
