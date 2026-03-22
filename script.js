@@ -1,6 +1,142 @@
 let cart = {}; 
+let currentLang = localStorage.getItem('lang') || 'ru';
+
+const i18n = {
+    ru: {
+        subtitle: "Суши в Ашкелоне",
+        workingHours: "Работаем по предварительным заказам",
+        openEveryday: "Open Everyday 12:00 - 00:00",
+        promoTitle: "Акция Пятницы!",
+        promoDesc: "Все запеченные роллы",
+        cartEmpty: "Ваша корзина пуста :(",
+        cartEmptySub: "Добавьте роллы, чтобы сделать заказ",
+        inCart: "В корзине",
+        pcs: "шт",
+        orderBtn: "Заказать",
+        myCart: "Моя корзина",
+        total: "Итого:",
+        totalToPay: "Итого к оплате:",
+        checkoutBtn: "Оформить заказ",
+        continueBtn: "Продолжить покупки",
+        checkoutTitle: "Оформление",
+        delivery: "Доставка",
+        pickup: "Самовывоз",
+        nameField: "Имя и Фамилия",
+        namePlaceholder: "Иван Иванов",
+        phoneField: "Номер телефона",
+        addressTitle: "Адрес доставки",
+        addressBadge: "от 250₪ - 0₪",
+        courierFee: "Услуга курьера:",
+        freeDeliveryNotice: "При заказе от 250₪ доставка БЕСПЛАТНАЯ!",
+        addressField: "Город, Улица и Дом",
+        addressPlaceholder: "Ашкелон, ул. Бен Гурион 12",
+        aptField: "Квартира",
+        floorField: "Этаж",
+        entranceField: "Подъезд",
+        commentField: "Комментарий к заказу",
+        commentPlaceholder: "Например, без лука, позвонить за 5 минут...",
+        sendWhatsapp: "Отправить в WhatsApp",
+        subtotal: "Сумма заказа:",
+        discount2plus1: "Скидка 2+1:",
+        deliveryCostLabel: "Доставка:",
+        promo2plus1Popup: "Акция 2+1 (Пятница):",
+        free: "Бесплатно!",
+        whatsappOrderTitle: "*Ваш заказ:*",
+        whatsappComment: "💬 *Комментарий:*",
+        whatsappDelivery: "🛵 *Доставка:*",
+        whatsappPromo: "🎁 *Акция 2+1 (Пятница):*",
+        whatsappTotal: "💰 *Итого к оплате:*",
+        whatsappPickup: "🛒 *Самовывоз*",
+        whatsappAddress: "📍 *Адрес:*",
+        whatsappApt: "Кв.",
+        whatsappFloor: "Этаж",
+        whatsappEnt: "Подъезд"
+    },
+    en: {
+        subtitle: "Sushi in Ashkelon",
+        workingHours: "Pre-orders only",
+        openEveryday: "Open Everyday 12:00 - 00:00",
+        promoTitle: "Friday Promo!",
+        promoDesc: "All baked rolls",
+        cartEmpty: "Your cart is empty :(",
+        cartEmptySub: "Add rolls to place an order",
+        inCart: "In cart",
+        pcs: "pcs",
+        orderBtn: "Order",
+        myCart: "My Cart",
+        total: "Total:",
+        totalToPay: "Total to pay:",
+        checkoutBtn: "Checkout",
+        continueBtn: "Continue shopping",
+        checkoutTitle: "Checkout",
+        delivery: "Delivery",
+        pickup: "Pickup",
+        nameField: "Full Name",
+        namePlaceholder: "John Doe",
+        phoneField: "Phone Number",
+        addressTitle: "Delivery Address",
+        addressBadge: "from 250₪ - 0₪",
+        courierFee: "Courier fee:",
+        freeDeliveryNotice: "Free delivery for orders over 250₪!",
+        addressField: "City, Street and House",
+        addressPlaceholder: "Ashkelon, Ben Gurion St 12",
+        aptField: "Apt",
+        floorField: "Floor",
+        entranceField: "Entrance",
+        commentField: "Order Comment",
+        commentPlaceholder: "e.g., no onion, call 5 mins before...",
+        sendWhatsapp: "Send to WhatsApp",
+        subtotal: "Subtotal:",
+        discount2plus1: "2+1 Discount:",
+        deliveryCostLabel: "Delivery:",
+        promo2plus1Popup: "Friday 2+1 Promo:",
+        free: "Free!",
+        whatsappOrderTitle: "*Your Order:*",
+        whatsappComment: "💬 *Comment:*",
+        whatsappDelivery: "🛵 *Delivery:*",
+        whatsappPromo: "🎁 *Friday 2+1 Promo:*",
+        whatsappTotal: "💰 *Total to pay:*",
+        whatsappPickup: "🛒 *Pickup*",
+        whatsappAddress: "📍 *Address:*",
+        whatsappApt: "Apt.",
+        whatsappFloor: "Floor",
+        whatsappEnt: "Ent."
+    }
+};
+
+function applyLanguage() {
+    document.documentElement.lang = currentLang;
+    const btn = document.getElementById('langBtn');
+    if (btn) btn.textContent = currentLang === 'ru' ? '🇷🇺' : '🇺🇸';
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) {
+            el.textContent = i18n[currentLang][key];
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[currentLang][key]) {
+            el.placeholder = i18n[currentLang][key];
+        }
+    });
+}
+
+function toggleLang() {
+    currentLang = currentLang === 'ru' ? 'en' : 'ru';
+    localStorage.setItem('lang', currentLang);
+    applyLanguage();
+    renderNav();
+    renderMenu();
+    updateCartWidget();
+    if (!document.getElementById('cartModal').classList.contains('opacity-0')) renderCartModalItems();
+    if (!document.getElementById('checkoutModal').classList.contains('opacity-0')) updateCheckoutSummary();
+}
 
 function init() {
+    applyLanguage();
     renderNav();
     renderMenu();
     updateCartWidget();
@@ -11,7 +147,7 @@ function renderNav() {
     const nav = document.getElementById('categoryNav');
     nav.innerHTML = menuData.map((cat, index) => `
         <a href="#cat-${index}" class="category-link whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium border transition-colors duration-200 ${index===0 ? 'text-brand border-brand/30 bg-brand/10' : 'text-muted border-white/5 bg-card hover:bg-white/5'}">
-            ${cat.category}
+            ${currentLang === 'en' ? cat.categoryEn : cat.category}
         </a>
     `).join('');
 }
@@ -22,15 +158,15 @@ function renderMenu() {
         <section id="cat-${index}" class="scroll-mt-36 menu-section">
             <h2 class="text-2xl font-bold mb-6 tracking-tight text-white/95 flex items-center justify-center gap-4 text-center uppercase text-[22px]">
                 <div class="h-px bg-white/10 flex-grow"></div>
-                ${cat.category}
+                ${currentLang === 'en' ? cat.categoryEn : cat.category}
                 <div class="h-px bg-white/10 flex-grow"></div>
             </h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 ${cat.items.map(item => `
                     <div class="product-card flex flex-col justify-between bg-card p-4 rounded-2xl border border-white/5 shadow-lg shadow-black/20">
                         <div class="mb-3">
-                            <h3 class="font-bold text-[17px] leading-snug mb-1.5 text-white/95">${item.name}</h3>
-                            <p class="text-xs text-muted leading-relaxed line-clamp-3">${item.ingredients}</p>
+                            <h3 class="font-bold text-[17px] leading-snug mb-1.5 text-white/95">${currentLang === 'en' ? item.nameEn : item.name}</h3>
+                            <p class="text-xs text-muted leading-relaxed line-clamp-3">${currentLang === 'en' ? item.ingredientsEn : item.ingredients}</p>
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t border-white/5 mt-auto">
                             <span class="font-bold text-lg text-brand">${item.price}₪</span>
@@ -300,8 +436,8 @@ function renderCartModalItems() {
         container.innerHTML = `
             <div class="flex flex-col items-center justify-center h-48 text-center pt-8">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-14 h-14 text-muted mb-4 opacity-40"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                <p class="text-white/60 font-medium tracking-wide">Ваша корзина пуста :(</p>
-                <p class="text-xs text-white/30 mt-1">Добавьте роллы, чтобы сделать заказ</p>
+                <p class="text-white/60 font-medium tracking-wide">${i18n[currentLang].cartEmpty}</p>
+                <p class="text-xs text-white/30 mt-1">${i18n[currentLang].cartEmptySub}</p>
             </div>
         `;
         btnCheckout.disabled = true;
@@ -312,7 +448,7 @@ function renderCartModalItems() {
                 <div class="flex justify-between items-center py-2 text-brand text-sm font-bold border-t border-brand/30 mt-2">
                     <span class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
-                        Акция 2+1 (Пятница):
+                        ${i18n[currentLang].promo2plus1Popup}
                     </span>
                     <span>-${discount}₪</span>
                 </div>
@@ -447,10 +583,10 @@ function submitOrder() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
     
-    let orderText = "🍣 *Новый заказ Mistorsush!* 🍣\n\n";
-    orderText += `*Имя:* ${name}\n`;
-    orderText += `*Телефон:* ${phone}\n`;
-    orderText += `*Получение:* ${orderType === 'delivery' ? 'Доставка 🚚' : 'Самовывоз 🚶‍♂️'}\n\n`;
+    let orderText = currentLang === 'en' ? "🍣 *New Mistorsush Order!* 🍣\n\n" : "🍣 *Новый заказ Mistorsush!* 🍣\n\n";
+    orderText += `*${i18n[currentLang].nameField}:* ${name}\n`;
+    orderText += `*${i18n[currentLang].phoneField}:* ${phone}\n`;
+    orderText += `*${currentLang === 'en' ? 'Receiving' : 'Получение'}:* ${orderType === 'delivery' ? i18n[currentLang].delivery + ' 🚚' : i18n[currentLang].pickup + ' 🚶‍♂️'}\n\n`;
     
     if (orderType === 'delivery') {
         const address = document.getElementById('custAddress').value.trim();
@@ -458,20 +594,21 @@ function submitOrder() {
         const floor = document.getElementById('custFloor').value.trim();
         const entrance = document.getElementById('custEntrance').value.trim();
         
-        orderText += `📍 *Актуальный Адрес:* ${address}`;
-        if(apt) orderText += `, Кв. ${apt}`;
-        if(floor) orderText += `, Этаж ${floor}`;
-        if(entrance) orderText += `, Подъезд ${entrance}`;
+        orderText += `${i18n[currentLang].whatsappAddress} ${address}`;
+        if(apt) orderText += `, ${i18n[currentLang].whatsappApt} ${apt}`;
+        if(floor) orderText += `, ${i18n[currentLang].whatsappFloor} ${floor}`;
+        if(entrance) orderText += `, ${i18n[currentLang].whatsappEnt} ${entrance}`;
         orderText += `\n\n`;
     }
     
     let totalPrice = 0;
-    orderText += `*Ваш заказ:*\n`;
+    orderText += `${i18n[currentLang].whatsappOrderTitle}\n`;
     for (const [id, count] of Object.entries(cart)) {
         if (count > 0) {
             const item = getItem(id);
             if (item) {
-                orderText += `— ${item.name} x${count} (${item.price * count}₪) \n`;
+                const itemName = currentLang === 'en' ? item.nameEn : item.name;
+                orderText += `— ${itemName} x${count} (${item.price * count}₪) \n`;
                 totalPrice += (item.price * count);
             }
         }
@@ -479,7 +616,7 @@ function submitOrder() {
     
     const discount = calculateDiscount();
     if (discount > 0) {
-        orderText += `\n🎁 *Акция 2+1 (Пятница):* -${discount}₪\n`;
+        orderText += `\n${i18n[currentLang].whatsappPromo} -${discount}₪\n`;
     }
     
     const finalSubtotal = totalPrice - discount;
@@ -488,9 +625,9 @@ function submitOrder() {
     if (orderType === 'delivery') {
         if (finalSubtotal < 250) {
             deliveryCost = 30;
-            orderText += `\n🛵 *Доставка:* 30₪\n`;
+            orderText += `\n${i18n[currentLang].whatsappDelivery} 30₪\n`;
         } else {
-            orderText += `\n🛵 *Доставка:* 0₪ (Бесплатно!)\n`;
+            orderText += `\n${i18n[currentLang].whatsappDelivery} 0₪ (${i18n[currentLang].free})\n`;
         }
     }
     
@@ -498,10 +635,10 @@ function submitOrder() {
     
     let comment = document.getElementById('custComment').value.trim();
     if(comment) {
-        orderText += `\n💬 *Комментарий:* ${comment}\n`;
+        orderText += `\n${i18n[currentLang].whatsappComment} ${comment}\n`;
     }
     
-    orderText += `\n💰 *Итого к оплате:* ${finalPrice}₪`;
+    orderText += `\n${i18n[currentLang].whatsappTotal} ${finalPrice}₪`;
     
     const businessPhone = "972559284670";
     const url = `https://wa.me/${businessPhone}?text=${encodeURIComponent(orderText)}`;
