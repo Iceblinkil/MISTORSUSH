@@ -107,7 +107,7 @@ const i18n = {
 function applyLanguage() {
     document.documentElement.lang = currentLang;
     const btn = document.getElementById('langBtn');
-    if (btn) btn.textContent = currentLang === 'ru' ? '🇷🇺' : '🇺🇸';
+    if (btn) btn.textContent = currentLang === 'ru' ? 'RU' : 'EN';
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
