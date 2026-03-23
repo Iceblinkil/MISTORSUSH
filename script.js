@@ -54,7 +54,10 @@ const i18n = {
         whatsappAddress: "📍 *Адрес:*",
         whatsappApt: "Кв.",
         whatsappFloor: "Этаж",
-        whatsappEnt: "Подъезд"
+        whatsappEnt: "Подъезд",
+        upsellTitle: "Не забудьте добавить",
+        upsellNoThanks: "Спасибо, не в этот раз",
+        upsellCheckoutBtn: "Перейти в корзину"
     },
     en: {
         subtitle: "Sushi in Ashkelon",
@@ -107,7 +110,10 @@ const i18n = {
         whatsappAddress: "📍 *Address:*",
         whatsappApt: "Apt.",
         whatsappFloor: "Floor",
-        whatsappEnt: "Ent."
+        whatsappEnt: "Ent.",
+        upsellTitle: "Don't forget to add",
+        upsellNoThanks: "No thanks",
+        upsellCheckoutBtn: "Go to cart"
     }
 };
 
@@ -656,6 +662,261 @@ function backToCart() {
     }, 300);
 }
 
+function backToCartFromUpsell() {
+    closeUpsellModal();
+    setTimeout(() => {
+        openCartModal();
+    }, 300);
+}
+
+// --- Upsell Logic ---
+let hasShownUpsell = false;
+let isItemsAddedFromUpsell = false;
+let currentUpsellSuggestionIds = [];
+
+function handleCheckoutClick() {
+    if (hasShownUpsell) {
+        openCheckoutModal();
+        return;
+    }
+    
+    const suggestions = getUpsellSuggestions();
+    if (suggestions.length === 0) {
+        hasShownUpsell = true;
+        openCheckoutModal();
+        return;
+    }
+    
+    currentUpsellSuggestionIds = suggestions.map(i => i.id);
+    renderUpsellCarousel(suggestions);
+    
+    // Reset state for this modal viewing
+    isItemsAddedFromUpsell = false;
+    hasShownUpsell = true; // Mark as shown so returning to cart allows checking out later
+    updateUpsellCheckoutButton();
+    
+    closeCartModal();
+    setTimeout(() => {
+        openUpsellModal();
+    }, 300);
+}
+
+function skipUpsellAndCheckout() {
+    hasShownUpsell = true;
+    closeUpsellModal();
+    setTimeout(() => {
+        openCheckoutModal();
+    }, 300);
+}
+
+function openUpsellModal() {
+    const modal = document.getElementById('upsellModal');
+    const content = document.getElementById('upsellModalContent');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    
+    if(window.innerWidth < 640) {
+        content.classList.remove('translate-y-full');
+    } else {
+        content.classList.remove('sm:translate-y-10');
+        content.classList.add('sm:translate-y-0');
+    }
+}
+
+function closeUpsellModal() {
+    const modal = document.getElementById('upsellModal');
+    const content = document.getElementById('upsellModalContent');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    
+    if(window.innerWidth < 640) {
+        content.classList.add('translate-y-full');
+    } else {
+        content.classList.remove('sm:translate-y-0');
+        content.classList.add('sm:translate-y-10');
+    }
+}
+
+function getUpsellSuggestions() {
+    let hasSushi = false;
+    let hasDrinks = false;
+    let hasSauces = false;
+    
+    const sushiCategories = ["Классические роллы", "Запеченные роллы"];
+    const drinksCategory = "Напитки";
+    const saucesCategory = "Соусы";
+    
+    // Check what's in the cart
+    for (const [id, count] of Object.entries(cart)) {
+        if (count > 0) {
+            const itemCategory = getCategoryOfItem(id);
+            if (sushiCategories.includes(itemCategory)) hasSushi = true;
+            if (itemCategory === drinksCategory) hasDrinks = true;
+            if (itemCategory === saucesCategory) hasSauces = true;
+        }
+    }
+    
+    // If cart is empty, return none
+    if (Object.keys(cart).length === 0) return [];
+    
+    // Gather available items by category that have an image
+    const availableDrinks = menuData.find(c => c.category === drinksCategory)?.items.filter(i => i.image) || [];
+    const availableSauces = menuData.find(c => c.category === saucesCategory)?.items.filter(i => i.image) || [];
+    
+    let cheapRolls = [];
+    menuData.filter(c => sushiCategories.includes(c.category)).forEach(cat => {
+        cat.items.forEach(i => {
+            if (i.price < 30 && i.image) {
+                cheapRolls.push(i);
+            }
+        });
+    });
+    
+    let allOtherItemsWithImage = [];
+    menuData.forEach(cat => {
+        cat.items.forEach(i => {
+            if (i.image) {
+                allOtherItemsWithImage.push(i);
+            }
+        });
+    });
+    
+    let suggestions = [];
+    
+    // Logical schema
+    if (hasSushi && !hasDrinks && !hasSauces) {
+        suggestions = [
+            ...getRandomItems(availableDrinks, 3),
+            ...getRandomItems(availableSauces, 3)
+        ];
+    } else if (hasSushi && hasDrinks && !hasSauces) {
+        suggestions = [
+            ...getRandomItems(availableSauces, 3),
+            ...getRandomItems(cheapRolls, 3)
+        ];
+    } else if (hasSushi && hasSauces && !hasDrinks) {
+        suggestions = [
+            ...getRandomItems(availableDrinks, 3),
+            ...getRandomItems(cheapRolls, 3)
+        ];
+    }
+    
+    // If somehow we don't have exactly 6 unique items, pad with any items with images (excluding ones already in the list)
+    if (suggestions.length < 6) {
+        const needed = 6 - suggestions.length;
+        const currentIds = new Set(suggestions.map(i => i.id));
+        const paddingPool = allOtherItemsWithImage.filter(i => !currentIds.has(i.id));
+        suggestions = [...suggestions, ...getRandomItems(paddingPool, needed)];
+    }
+    
+    return suggestions.slice(0, 6);
+}
+
+function getRandomItems(array, count) {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+}
+
+function getCategoryOfItem(id) {
+    for (const cat of menuData) {
+        if (cat.items.find(i => i.id === id)) {
+            return cat.category;
+        }
+    }
+    return null;
+}
+
+function renderUpsellControlsHTML(id) {
+    const count = cart[id] || 0;
+    if (count > 0) {
+        return `
+            <div class="flex items-center bg-dark rounded-full p-0.5 border border-white/10 shadow-inner">
+                <button type="button" class="w-7 h-7 flex items-center justify-center text-muted hover:text-white active:scale-95 transition" onclick="removeUpsellItem('${id}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" /></svg>
+                </button>
+                <span class="w-6 text-center text-sm font-bold text-white">${count}</span>
+                <button type="button" class="w-7 h-7 flex items-center justify-center text-brand hover:text-white active:scale-95 transition" onclick="addUpsellItemToCart('${id}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                </button>
+            </div>
+        `;
+    } else {
+        return `
+            <button type="button" onclick="addUpsellItemToCart('${id}')" class="w-8 h-8 rounded-full bg-white/5 text-white flex items-center justify-center active:scale-90 transition-all border border-white/10 hover:bg-white/10 shadow-sm relative overflow-hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            </button>
+        `;
+    }
+}
+
+function renderUpsellCarousel(items) {
+    const container = document.getElementById('upsellCarouselContainer');
+    
+    container.innerHTML = items.map(item => `
+        <div class="upsell-card shrink-0 w-[140px] lg:w-full lg:max-w-[140px] bg-card p-3 rounded-2xl border border-white/5 shadow-lg flex flex-col items-center relative overflow-hidden group snap-center">
+            <div class="w-[90px] h-[90px] mb-2 flex items-center justify-center relative">
+                <img src="${item.image}" alt="${item.name}" class="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300">
+            </div>
+            <h3 class="font-bold text-[13px] leading-tight text-center text-white/95 line-clamp-2 min-h-[30px] w-full mb-1">
+                ${currentLang === 'en' ? (item.nameEn || item.name) : item.name}
+            </h3>
+            <div class="flex items-center justify-between w-full mt-auto pt-2 border-t border-white/5 h-[40px]">
+                <span class="font-bold text-sm text-brand">${item.price}₪</span>
+                <div id="upsell-controls-${item.id}">
+                    ${renderUpsellControlsHTML(item.id)}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addUpsellItemToCart(id) {
+    addToCart(id);
+    
+    isItemsAddedFromUpsell = true;
+    updateUpsellCheckoutButton();
+    
+    const container = document.getElementById('upsell-controls-' + id);
+    if (container) {
+        container.innerHTML = renderUpsellControlsHTML(id);
+    }
+}
+
+function removeUpsellItem(id) {
+    removeFromCart(id);
+    
+    const container = document.getElementById('upsell-controls-' + id);
+    if (container) {
+        container.innerHTML = renderUpsellControlsHTML(id);
+    }
+    
+    // Check if there are any upsell items left in the cart
+    let stillHasItems = false;
+    for (const sid of currentUpsellSuggestionIds) {
+        if (cart[sid] > 0) {
+            stillHasItems = true;
+            break;
+        }
+    }
+    isItemsAddedFromUpsell = stillHasItems;
+    updateUpsellCheckoutButton();
+}
+
+function updateUpsellCheckoutButton() {
+    const btn = document.getElementById('btnUpsellCheckout');
+    const textSpan = document.getElementById('upsellBtnText');
+    
+    if (isItemsAddedFromUpsell) {
+        btn.classList.remove('bg-white/5', 'text-white/90', 'border-white/10');
+        btn.classList.add('bg-[#25D366]', 'text-white', 'border-transparent', 'shadow-lg', 'shadow-[#25D366]/20');
+        textSpan.textContent = i18n[currentLang].upsellCheckoutBtn;
+        btn.setAttribute('onclick', 'backToCartFromUpsell()');
+    } else {
+        btn.classList.add('bg-white/5', 'text-white/90', 'border-white/10');
+        btn.classList.remove('bg-[#25D366]', 'text-white', 'border-transparent', 'shadow-lg', 'shadow-[#25D366]/20');
+        textSpan.textContent = i18n[currentLang].upsellNoThanks;
+        btn.setAttribute('onclick', 'skipUpsellAndCheckout()');
+    }
+}
+
 function setOrderType(type) {
     orderType = type;
     const selector = document.getElementById('deliverySelector');
@@ -764,6 +1025,7 @@ function submitOrder() {
     
     // Clear and close
     cart = {};
+    hasShownUpsell = false;
     updateCartWidget();
     closeCheckoutModal();
     window.location.href = url;
