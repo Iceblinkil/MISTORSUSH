@@ -757,25 +757,23 @@ function getUpsellSuggestions() {
     // If cart is empty, return none
     if (Object.keys(cart).length === 0) return [];
     
-    // Gather available items by category that have an image
-    const availableDrinks = menuData.find(c => c.category === drinksCategory)?.items.filter(i => i.image) || [];
-    const availableSauces = menuData.find(c => c.category === saucesCategory)?.items.filter(i => i.image) || [];
+    // Gather available items by category
+    const availableDrinks = menuData.find(c => c.category === drinksCategory)?.items || [];
+    const availableSauces = menuData.find(c => c.category === saucesCategory)?.items || [];
     
     let cheapRolls = [];
     menuData.filter(c => sushiCategories.includes(c.category)).forEach(cat => {
         cat.items.forEach(i => {
-            if (i.price < 30 && i.image) {
+            if (i.price < 30) {
                 cheapRolls.push(i);
             }
         });
     });
     
-    let allOtherItemsWithImage = [];
+    let allOtherItems = [];
     menuData.forEach(cat => {
         cat.items.forEach(i => {
-            if (i.image) {
-                allOtherItemsWithImage.push(i);
-            }
+            allOtherItems.push(i);
         });
     });
     
@@ -799,11 +797,11 @@ function getUpsellSuggestions() {
         ];
     }
     
-    // If somehow we don't have exactly 6 unique items, pad with any items with images (excluding ones already in the list)
+    // If somehow we don't have exactly 6 unique items, pad with any items (excluding ones already in the list)
     if (suggestions.length < 6) {
         const needed = 6 - suggestions.length;
         const currentIds = new Set(suggestions.map(i => i.id));
-        const paddingPool = allOtherItemsWithImage.filter(i => !currentIds.has(i.id));
+        const paddingPool = allOtherItems.filter(i => !currentIds.has(i.id));
         suggestions = [...suggestions, ...getRandomItems(paddingPool, needed)];
     }
     
@@ -851,11 +849,13 @@ function renderUpsellCarousel(items) {
     const container = document.getElementById('upsellCarouselContainer');
     
     container.innerHTML = items.map(item => `
-        <div class="upsell-card shrink-0 w-[140px] lg:w-full lg:max-w-[140px] bg-card p-3 rounded-2xl border border-white/5 shadow-lg flex flex-col items-center relative overflow-hidden group snap-center">
-            <div class="w-[90px] h-[90px] mb-2 flex items-center justify-center relative">
+        <div class="upsell-card shrink-0 w-[140px] lg:w-full lg:max-w-[140px] bg-card p-3 rounded-2xl border border-white/5 shadow-lg flex flex-col items-center relative overflow-hidden group snap-center min-h-[160px]">
+            ${item.image ? `
+            <div class="w-[90px] h-[90px] mb-2 flex items-center justify-center relative bg-white/5 rounded-xl">
                 <img src="${item.image}" alt="${item.name}" class="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300">
             </div>
-            <h3 class="font-bold text-[13px] leading-tight text-center text-white/95 line-clamp-2 min-h-[30px] w-full mb-1">
+            ` : ''}
+            <h3 class="font-bold text-[13px] leading-tight text-center text-white/95 line-clamp-2 min-h-[30px] w-full mb-1 ${item.image ? '' : 'mt-4'}">
                 ${currentLang === 'en' ? (item.nameEn || item.name) : item.name}
             </h3>
             <div class="flex items-center justify-between w-full mt-auto pt-2 border-t border-white/5 h-[40px]">
