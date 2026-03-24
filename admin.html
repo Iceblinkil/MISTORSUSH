@@ -58,38 +58,112 @@
     </style>
 </head>
 
-<body class="bg-dark text-white antialiased min-h-screen p-4 md:p-8 custom-scrollbar">
-    <div class="max-w-4xl mx-auto pb-20">
-        <header class="mb-4 flex flex-col items-center">
-            <div class="flex items-center gap-4 w-full justify-between mb-4">
+<body class="bg-dark text-white antialiased min-h-screen custom-scrollbar relative">
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-dark flex items-center justify-center p-4 animate-fade-in group">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand/10 blur-[100px] rounded-full animate-pulse"></div>
+            <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-brand/5 blur-[100px] rounded-full animate-pulse delay-700"></div>
+        </div>
+
+        <div class="w-full max-w-md bg-card border border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] relative z-10 backdrop-blur-xl">
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner border border-brand/20">🍣</div>
+                <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase italic">
+                    MISTOR<span class="text-brand">SUSH</span>
+                </h1>
+                <p class="text-muted text-[10px] font-black uppercase tracking-[0.3em] mt-2 opacity-60">Admin Security Layer</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-6">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Email</label>
+                    <input type="email" id="auth-email" required placeholder="admin@example.com"
+                           class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Пароль</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••"
+                           class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
+                </div>
+                <button type="submit" id="login-btn"
+                        class="w-full py-4 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-[0.98] shadow-xl shadow-white/5 uppercase text-xs tracking-[0.2em] transform">
+                    Войти в панель
+                </button>
+                <div id="auth-error" class="text-center text-brand text-[10px] font-black uppercase tracking-widest hidden animate-bounce">
+                    Неверный логин или пароль
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-content" class="max-w-4xl mx-auto pb-20 hidden">
+        <header class="mb-4 flex flex-col items-center sticky top-0 z-40 bg-dark/80 backdrop-blur-xl py-4 -mx-4 px-4 border-b border-white/5">
+            <div class="flex items-center gap-4 w-full justify-between">
                 <button onclick="openDrawer()"
-                    class="p-2 -ml-2 text-white/70 hover:text-brand transition-all hover:scale-110 active:scale-90">
+                    class="p-2 -ml-2 text-white/70 hover:text-brand transition-all hover:scale-110 active:scale-90 relative">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
+                    <div id="new-orders-indicator" class="hidden absolute top-1 right-1 w-3 h-3 bg-brand border-2 border-dark rounded-full"></div>
                 </button>
-                <div class="flex flex-col items-center flex-grow">
-                    <h1 class="text-xl md:text-3xl font-extrabold tracking-[0.3em] uppercase drop-shadow-lg">
+                <div onclick="showView('dashboard')" class="flex flex-col items-center flex-grow cursor-pointer group">
+                    <h1 class="text-xl md:text-2xl font-black tracking-[0.3em] uppercase transition-all group-hover:scale-105">
                         MISTOR<span class="text-brand">SUSH</span>
                     </h1>
+                    <div class="w-8 h-1 bg-brand rounded-full transition-all group-hover:w-16"></div>
                 </div>
-                <div class="w-12"></div> <!-- Spacer for centering -->
+                <button onclick="handleLogout()" class="text-muted hover:text-brand transition-all p-2 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    </svg>
+                </button>
             </div>
-            <div class="w-12 h-1 bg-brand rounded-full shadow-[0_0_10px_rgba(230,57,70,0.5)]"></div>
-            <div id="status-msg" class="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-[#25D366]/80">
-                Связь с базой...
+            <div id="status-msg" class="mt-2 text-[8px] font-black uppercase tracking-[0.3em] text-[#25D366]/80 text-center w-full">
+                Система активна
             </div>
         </header>
 
-        <!-- Category Nav -->
-        <nav id="category-nav"
-            class="sticky top-0 z-30 bg-dark/80 backdrop-blur-md border-b border-white/5 -mx-4 px-4 py-4 mb-8 flex flex-wrap gap-2 items-center justify-center">
-            <!-- Populated via JS -->
-        </nav>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="space-y-12 animate-fade-in py-10">
+            <div class="text-center space-y-4 mb-16">
+                <h2 class="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">
+                    Панель <span class="text-brand">Управления</span>
+                </h2>
+                <p class="text-muted text-xs md:text-sm uppercase tracking-[0.3em] font-bold opacity-50">Выберите раздел для работы</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <button onclick="showView('orders')" 
+                        class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
+                    <div class="absolute -right-16 -top-16 w-48 h-48 bg-brand/10 blur-[80px] rounded-full group-hover:bg-brand/20 transition-all"></div>
+                    <div class="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">📋</div>
+                    <div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Заказы</h3>
+                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Просмотр новых заявок, адресов доставки и состава заказов.</p>
+                    </div>
+                </button>
+
+                <button onclick="showView('products')" 
+                        class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
+                    <div class="absolute -right-16 -top-16 w-48 h-48 bg-white/5 blur-[80px] rounded-full group-hover:bg-white/10 transition-all"></div>
+                    <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">🍱</div>
+                    <div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Меню</h3>
+                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Управление ассортиментом: редактирование цен, названий и категорий.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
 
         <!-- Products View -->
-        <div id="products-view" class="space-y-8 animate-fade-in">
+        <div id="products-view" class="hidden space-y-8 animate-fade-in">
+            <!-- Category Nav Inside Products View -->
+            <nav id="category-nav"
+                class="sticky top-[80px] z-30 bg-dark/80 backdrop-blur-md border-b border-white/5 -mx-4 px-4 py-4 mb-4 flex flex-wrap gap-2 items-center justify-center">
+                <!-- Populated via JS -->
+            </nav>
             <!-- Toggle Button -->
             <button id="toggle-form-btn" onclick="toggleAddForm()"
             class="w-full py-5 bg-gradient-to-r from-brand to-[#ff4d5a] hover:brightness-110 text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all active:scale-[0.98] mb-8 flex items-center justify-center gap-4 border border-white/10">
@@ -724,40 +798,91 @@
             }
         }
 
-        function showView(view) {
-            const productsView = document.getElementById('products-view');
-            const ordersView = document.getElementById('orders-view');
-            const navProducts = document.getElementById('nav-btn-products');
-            const navOrders = document.getElementById('nav-btn-orders');
-            const catNav = document.getElementById('category-nav');
-
-            if (view === 'products') {
-                productsView.classList.remove('hidden');
-                ordersView.classList.add('hidden');
-                catNav.classList.remove('hidden');
-                
-                navProducts.classList.add('bg-brand', 'text-white', 'shadow-brand/20');
-                navProducts.classList.remove('bg-transparent', 'text-white/60');
-                
-                navOrders.classList.remove('bg-brand', 'text-white', 'shadow-brand/20');
-                navOrders.classList.add('bg-transparent', 'text-white/60');
-                load();
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                showView('dashboard');
             } else {
-                productsView.classList.add('hidden');
-                ordersView.classList.remove('hidden');
-                catNav.classList.add('hidden');
-                
-                navOrders.classList.add('bg-brand', 'text-white', 'shadow-brand/20');
-                navOrders.classList.remove('bg-transparent', 'text-white/60');
-                
-                navProducts.classList.remove('bg-brand', 'text-white', 'shadow-brand/20');
-                navProducts.classList.add('bg-transparent', 'text-white/60');
-                loadOrders();
+                document.getElementById('auth-overlay').classList.remove('hidden');
+                document.getElementById('main-content').classList.add('hidden');
             }
-            closeDrawer();
         }
 
-        load();
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('login-btn');
+            const errorEl = document.getElementById('auth-error');
+
+            btn.disabled = true;
+            btn.innerText = 'ПРОВЕРКА...';
+            errorEl.classList.add('hidden');
+
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errorEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = 'Войти в панель';
+            } else {
+                checkSession();
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('Выйти из системы?')) return;
+            await sb.auth.signOut();
+            checkSession();
+        }
+
+        function showView(view) {
+            const views = ['dashboard', 'products', 'orders'];
+            const navButtons = {
+                'dashboard': document.getElementById('nav-btn-dashboard'),
+                'products': document.getElementById('nav-btn-products'),
+                'orders': document.getElementById('nav-btn-orders')
+            };
+
+            views.forEach(v => {
+                const el = document.getElementById(v + '-view');
+                if (el) el.classList.add('hidden');
+                
+                const btn = navButtons[v];
+                if (btn) {
+                    btn.classList.remove('bg-brand', 'text-white', 'shadow-brand/20');
+                    btn.classList.add('bg-transparent', 'text-white/60');
+                }
+            });
+
+            const activeView = document.getElementById(view + '-view');
+            if (activeView) activeView.classList.remove('hidden');
+            
+            const activeBtn = navButtons[view];
+            if (activeBtn) {
+                activeBtn.classList.add('bg-brand', 'text-white', 'shadow-brand/20');
+                activeBtn.classList.remove('bg-transparent', 'text-white/60');
+            }
+
+            // Products-specific UI
+            // document.getElementById('category-nav') is inside products-view now
+
+            if (view === 'products') load();
+            if (view === 'orders') loadOrders();
+
+            closeDrawer();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        checkSession();
+        
+        // Listen for auth changes
+        sb.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') checkSession();
+            if (event === 'SIGNED_OUT') checkSession();
+        });
     </script>
 </body>
 
