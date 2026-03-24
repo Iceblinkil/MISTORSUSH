@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка Суши Ашкелон</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .product-row {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .info {
+            flex-grow: 1;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .in {
+            background: #e9f7ef;
+            color: #28a745;
+        }
+
+        .out {
+            background: #ffe9e9;
+            color: #dc3545;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-toggle {
+            background: #007bff;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+
+        #error-msg {
+            color: red;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-container">
+        <h1>🍣 Панель управления меню</h1>
+        <div id="error-msg"></div>
+        <div id="admin-menu">Загрузка товаров из базы...</div>
+    </div>
+
+    <script>
+        // Проверьте, чтобы в конце URL НЕ БЫЛО слэша /
+        const SUPABASE_URL = 'https://laqbtwzothmkdjapstkq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8esumaaGIGYX0JBJbDb8_g_U77-xiVv';
+
+        // Инициализация
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadMenu() {
+            console.log("Попытка запроса к:", SUPABASE_URL);
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*');
+
+                if (error) {
+                    console.error("Ошибка базы:", error);
+                    document.getElementById('error-msg').innerText = "Ошибка базы: " + error.message;
+                    return;
+                }
+
+                console.log("Данные получены успешно!", data);
+
+                const container = document.getElementById('admin-menu');
+                container.innerHTML = data.map(p => `
+            <div class="product-row">
+                <div class="info">
+                    <strong>${p.name}</strong> [${p.price} ₪]
+                    <span class="status ${p.is_available ? 'in' : 'out'}">
+                        ${p.is_available ? 'В наличии' : 'Нет'}
+                    </span>
+                </div>
+                <div>
+                    <button class="btn-toggle" onclick="toggle(${p.id}, ${p.is_available})">
+                        ${p.is_available ? 'Выкл' : 'Вкл'}
+                    </button>
+                </div>
+            </div>
+        `).join('');
+            } catch (err) {
+                console.error("Критическая ошибка fetch:", err);
+                document.getElementById('error-msg').innerText = "Браузер заблокировал запрос. Проверьте CORS в Supabase.";
+            }
+        }
+
+        loadMenu();
+    </script>
+</body>
+
+</html>
