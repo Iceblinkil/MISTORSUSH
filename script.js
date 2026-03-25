@@ -495,18 +495,44 @@ let isPromoActive = false;
 let promoChecked = false;
 
 async function verifyPromoDay() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     try {
-        const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Jerusalem', { cache: "no-store", timeout: 3000 });
+        // Primary: timeapi.io
+        const response = await fetch('https://www.timeapi.io/api/Time/current/zone?timeZone=Asia/Jerusalem', { 
+            cache: "no-store",
+            signal: controller.signal 
+        });
+        
         if (response.ok) {
             const data = await response.json();
-            // day_of_week: 0=Sunday ... 5=Friday
-            isPromoActive = (data.day_of_week === 5);
+            // timeapi.io returns dayOfWeek as a string (e.g., "Friday")
+            isPromoActive = (data.dayOfWeek === 'Friday');
         } else {
-            // Fallback to local time if API errors out
-            isPromoActive = (new Date().getDay() === 5);
+            throw new Error("timeapi.io failed");
         }
     } catch (e) {
-        isPromoActive = (new Date().getDay() === 5);
+        // Fallback: Try worldtimeapi.org or local time
+        try {
+            const backupController = new AbortController();
+            const backupTimeout = setTimeout(() => backupController.abort(), 3000);
+            const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Jerusalem', { 
+                cache: "no-store",
+                signal: backupController.signal 
+            });
+            clearTimeout(backupTimeout);
+            if (response.ok) {
+                const data = await response.json();
+                isPromoActive = (data.day_of_week === 5);
+            } else {
+                isPromoActive = (new Date().getDay() === 5);
+            }
+        } catch (err) {
+            isPromoActive = (new Date().getDay() === 5);
+        }
+    } finally {
+        clearTimeout(timeoutId);
     }
     promoChecked = true;
 
@@ -1173,7 +1199,14 @@ async function submitOrder() {
 
     const fullAddress = `${address}${apt ? ', кв.' + apt : ''}${floor ? ', эт.' + floor : ''}${entrance ? ', под.' + entrance : ''}`;
 
-    let orderItemsText = cart.map(item => `${item.name} x${item.quantity} (${item.price * item.quantity}₪)`).join('\n');
+    let orderItemsText = Object.entries(cart)
+        .filter(([id, count]) => count > 0)
+        .map(([id, count]) => {
+            const item = getItem(id);
+            return item ? `${item.name} x${count} (${item.price * count}₪)` : '';
+        })
+        .filter(text => text !== '')
+        .join('\n');
     let orderDetailsForDb = orderItemsText.trim();
     if (discount > 0) {
         orderDetailsForDb += `\nСкидка: -${discount}₪`;
@@ -1184,7 +1217,7 @@ async function submitOrder() {
 
     try {
         console.log("Начинаю отправку заказа в Supabase...");
-        
+
         if (sb) {
             const { error } = await sb.from('orders').insert([{
                 status: 'Готовится',
@@ -1244,13 +1277,13 @@ async function submitOrder() {
 
         // Finalize UI and Redirect
         window.location.href = whatsappUrl;
-        
+
         // Final cleanup
         cart = [];
         updateCart();
         closeCheckoutModal();
         closeCartModal();
-        
+
         btn.disabled = false;
         btn.innerHTML = originalBtnContent;
 
