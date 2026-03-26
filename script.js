@@ -48,7 +48,7 @@ const i18n = {
         deliveryCostLabel: "Доставка:",
         promo2plus1Popup: "Акция 2+1 (Пятница):",
         free: "Бесплатно!",
-        freeKitBanner: "К каждому набору роллов: соя, терияки, васаби и имбирь — ",
+        freeKitBanner: "К каждому набору роллов: соевый соус 2 шт, терияки 2 шт, васаби и имбирь — ",
         freeUpper: "БЕСПЛАТНО!",
         freeKitCartName: "Набор специй (Соя, терияки, васаби, имбирь)",
         whatsappOrderTitle: "*Ваш заказ:*",
@@ -67,12 +67,14 @@ const i18n = {
         searchPlaceholder: "Поиск...",
         searchResults: "Результаты поиска",
         noResults: "Ничего не найдено :(",
-        outOfStock: "Нет в наличии"
+        outOfStock: "Нет в наличии",
+        receiving: "Получение",
+        freeDelivery: "БЕСПЛАТНО"
     },
     en: {
         subtitle: "Sushi in Ashkelon",
         workingHours: "Pre-orders only",
-        openEveryday: "Open Everyday 12:00 - 00:00",
+        openEveryday: "Open Everyday 12:00 - 23:00",
         promoTitle: "Friday Promo!",
         promoDesc: "All baked rolls",
         cartEmpty: "Your cart is empty :(",
@@ -108,7 +110,7 @@ const i18n = {
         deliveryCostLabel: "Delivery:",
         promo2plus1Popup: "Friday 2+1 Promo:",
         free: "Free!",
-        freeKitBanner: "With every roll: soy, teriyaki, wasabi and ginger — ",
+        freeKitBanner: "With every roll: 2 soy, 2 teriyaki, wasabi and ginger — ",
         freeUpper: "FREE!",
         freeKitCartName: "Sauce Kit (Soy, teriyaki, wasabi, ginger)",
         whatsappOrderTitle: "*Your Order:*",
@@ -127,7 +129,9 @@ const i18n = {
         searchPlaceholder: "Search...",
         searchResults: "Search Results",
         noResults: "Nothing found :(",
-        outOfStock: "Out of Stock"
+        outOfStock: "Out of Stock",
+        receiving: "Receiving",
+        freeDelivery: "FREE"
     }
 };
 
@@ -189,7 +193,7 @@ function transformSupabaseData(data) {
         menuData.forEach(cat => {
             if (cat.items) {
                 cat.items.forEach(item => {
-                    translationMap[item.name] = {
+                    translationMap[item.name.toLowerCase()] = {
                         nameEn: item.nameEn,
                         ingredientsEn: item.ingredientsEn
                     };
@@ -233,7 +237,7 @@ function transformSupabaseData(data) {
             category: categoryNamesRu[catSlug] || catSlug,
             categoryEn: categoryNamesEn[catSlug] || catSlug,
             items: data.filter(p => p.category === catSlug).map(p => {
-                const trans = translationMap[p.name] || {};
+                const trans = translationMap[p.name.toLowerCase()] || {};
                 return {
                     id: p.id.toString(),
                     name: p.name,
@@ -742,7 +746,7 @@ function renderCartModalItems() {
                 html += `
                     <div class="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
                         <div class="flex-1 pr-3">
-                            <h4 class="text-[15px] font-bold text-white/95">${item.name}</h4>
+                            <h4 class="text-[15px] font-bold text-white/95">${currentLang === 'en' ? (item.nameEn || item.name) : item.name}</h4>
                             <span class="text-brand font-bold mt-0.5 inline-block text-[15px]">${item.price}₪</span>
                         </div>
                         <div class="flex items-center bg-dark rounded-full p-0.5 border border-white/10 shrink-0">
@@ -1198,7 +1202,8 @@ async function submitOrder() {
         .filter(([id, count]) => count > 0)
         .map(([id, count]) => {
             const item = getItem(id);
-            return item ? `${item.name} x${count} (${item.price * count}₪)` : '';
+            const displayName = item ? (currentLang === 'en' ? (item.nameEn || item.name) : item.name) : '';
+            return item ? `${displayName} x${count} (${item.price * count}₪)` : '';
         })
         .filter(text => text !== '')
         .join('\n');
@@ -1215,16 +1220,16 @@ async function submitOrder() {
 
         if (sb) {
             const { error } = await sb.from('orders').insert([{
-                status: 'Готовится',
-                total_sum: finalPrice,
+                customer_name: name,
+                customer_phone: phone,
                 delivery_address: orderType === 'delivery' ? fullAddress : 'Самовывоз',
+                order_type: orderType === 'delivery' ? 'Доставка' : 'Самовывоз',
+                comment: comment,
+                total_sum: finalPrice,
+                status: 'new',
                 items_json: {
-                    customer_name: name,
-                    customer_phone: phone,
-                    order_type: orderType,
-                    order_items: orderDetailsForDb,
-                    comment: comment,
-                    cart: cart
+                    cart: cart,
+                    order_items: orderDetailsForDb
                 }
             }]);
 
@@ -1244,7 +1249,7 @@ async function submitOrder() {
         let whatsappText = currentLang === 'en' ? "🍣 *New Mistorsush Order!* 🍣\n\n" : "🍣 *Новый заказ Mistorsush!* 🍣\n\n";
         whatsappText += `*${i18n[currentLang].nameField}:* ${name}\n`;
         whatsappText += `*${i18n[currentLang].phoneField}:* ${phone}\n`;
-        whatsappText += `*${currentLang === 'en' ? 'Receiving' : 'Получение'}:* ${orderType === 'delivery' ? i18n[currentLang].delivery + ' 🚚' : i18n[currentLang].pickup + ' 🚶‍♂️'}\n\n`;
+        whatsappText += `*${i18n[currentLang].receiving}:* ${orderType === 'delivery' ? i18n[currentLang].delivery + ' 🚚' : i18n[currentLang].pickup + ' 🚶‍♂️'}\n\n`;
 
         if (orderType === 'delivery') {
             whatsappText += `${i18n[currentLang].whatsappAddress} ${fullAddress}\n\n`;
@@ -1257,9 +1262,9 @@ async function submitOrder() {
         }
 
         if (deliveryCost > 0) {
-            whatsappText += `\n*${i18n[currentLang].deliveryFee}:* ${deliveryCost}₪`;
+            whatsappText += `\n*${i18n[currentLang].deliveryCostLabel}:* ${deliveryCost}₪`;
         } else if (orderType === 'delivery') {
-            whatsappText += `\n*${i18n[currentLang].deliveryFee}:* ${currentLang === 'en' ? 'FREE' : 'БЕСПЛАТНО'}`;
+            whatsappText += `\n*${i18n[currentLang].deliveryCostLabel}:* ${i18n[currentLang].freeDelivery}`;
         }
 
         whatsappText += `\n\n*${i18n[currentLang].totalToPay}: ${finalPrice}₪*`;
