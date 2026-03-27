@@ -16,7 +16,7 @@ const menuData = [
       { id: "c11", name: "Филадельфия Осмаленная", nameEn: "Seared Philadelphia", price: 50, ingredients: "Рис, огурец, кремчиз, лосось сверху", ingredientsEn: "Rice, cucumber, cream cheese, salmon on top" },
       { id: "c12", name: "Филадельфия Тамаго", nameEn: "Philadelphia Tamago", price: 45, ingredients: "Рис, омлет тамаго, огурец, кремчиз, лосось сверху", ingredientsEn: "Rice, tamago omelet, cucumber, cream cheese, salmon on top" },
       { id: "c13", name: "Зеленый дракон", nameEn: "Green Dragon", price: 60, ingredients: "Рис, огурец, кремчиз, лосось сверху, авокадо, терияки, кунжут", ingredientsEn: "Rice, cucumber, cream cheese, salmon on top, covered with avocado, teriyaki sauce, sesame" },
-      { id: "c14", name: "Красный дракон", nameEn: "Red Dragon", price: 65, ingredients: "Рис, укроп, кремчиз, лосось сверху, шапка из икры", ingredientsEn: "Rice, dill, cream cheese, salmon on top, caviar topping" },
+      { id: "c14", name: "Красный дракон", nameEn: "Red Dragon", price: 65, ingredients: "Рис, укроп, кремчиз, лосось сверху, шапка из икры", ingredientsEn: "Rice, dill, cream cheese, salmon on top, caviar topping", image: "img/classic_rolls/Red_Dragon.webp" },
       { id: "c15", name: "Креветка Панко (не жаренный)", nameEn: "Panko Shrimp (non-fried)", price: 45, ingredients: "Рис, кремчиз, креветка, хасса, панировочные сухари", ingredientsEn: "Rice, cream cheese, shrimp, lettuce, breadcrumbs" },
       { id: "c16", name: "Лосось Панко (не жаренный)", nameEn: "Panko Salmon (non-fried)", price: 50, ingredients: "Рис, кремчиз, лосось, хасса, панировочные сухари", ingredientsEn: "Rice, cream cheese, salmon, lettuce, breadcrumbs" },
       { id: "c17", name: "Сырная креветка", nameEn: "Cheese Shrimp", price: 50, ingredients: "Рис, кремчиз, креветка, огурец, сыр чеддер сверху", ingredientsEn: "Rice, cream cheese, shrimp, cucumber, cheddar cheese on top" },
@@ -64,10 +64,10 @@ const menuData = [
     category: "Напитки",
     categoryEn: "Drinks",
     items: [
-      { id: "d1", name: "Кока-Кола", nameEn: "Coca-Cola", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/drinks/coca_cola_p.webp" },
-      { id: "d2", name: "Кока-Кола Зеро", nameEn: "Coca-Cola Zero", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/drinks/coca_cola_zero_p.webp" },
-      { id: "d3", name: "Спрайт", nameEn: "Sprite", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/drinks/sprite.webp" },
-      { id: "d4", name: "Спрайт Зеро", nameEn: "Sprite Zero", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/drinks/sprite_zero.webp" }
+      { id: "d1", name: "Кока-Кола", nameEn: "Coca-Cola", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/products/coca_cola_p.webp" },
+      { id: "d2", name: "Кока-Кола Зеро", nameEn: "Coca-Cola Zero", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/products/coca_cola_zero_p.webp" },
+      { id: "d3", name: "Спрайт", nameEn: "Sprite", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/products/sprite.webp" },
+      { id: "d4", name: "Спрайт Зеро", nameEn: "Sprite Zero", price: 12, ingredients: "0.33 л", ingredientsEn: "0.33 L", image: "img/products/sprite_zero.webp" }
     ]
   }
 ];
