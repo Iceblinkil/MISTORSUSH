@@ -5,6 +5,7 @@ let isSearchActive = false;
 let searchQuery = '';
 let currentUser = null;
 let authMode = 'login'; // login or register
+let orderTiming = 'asap'; // asap or scheduled
 
 const S_URL = 'https://iaqbtwsothmkdjapstkq.supabase.co';
 const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcWJ0d3NvdGhta2RqYXBzdGtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjE0ODYsImV4cCI6MjA4OTgzNzQ4Nn0.ye0QGkypstTfxGjCkytn_x7bwsa-2tNiq3EIEulsvV0';
@@ -830,6 +831,27 @@ function updateCheckoutSummary() {
 function openCheckoutModal() {
     closeCartModal();
     updateCheckoutSummary();
+    
+    // Show/Hide Order Timing section for registered users
+    const timingSection = document.getElementById('orderTimingSection');
+    if (timingSection) {
+        if (currentUser) {
+            timingSection.classList.remove('hidden');
+            setOrderTiming('asap'); // Reset to ASAP
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('orderDate');
+            if (dateInput) {
+                dateInput.value = today;
+                dateInput.setAttribute('min', today);
+            }
+        } else {
+            timingSection.classList.add('hidden');
+            orderTiming = 'asap';
+        }
+    }
+
     const modal = document.getElementById('checkoutModal');
     const content = document.getElementById('checkoutModalContent');
     modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -1160,6 +1182,26 @@ async function submitOrder() {
     const entrance = document.getElementById('custEntrance').value.trim();
     const comment = document.getElementById('custComment').value.trim();
 
+    // Timing Validation
+    let deliveryTimeText = 'Как можно скорее';
+    if (orderTiming === 'scheduled') {
+        const date = document.getElementById('orderDate').value;
+        const time = document.getElementById('orderTime').value;
+        
+        if (!date || !time) {
+            alert(currentLang === 'en' ? "Please select date and time for pre-order" : "Пожалуйста, выберите дату и время для предзаказа");
+            return;
+        }
+        
+        const hour = parseInt(time.split(':')[0]);
+        if (hour < 12 || hour >= 23) {
+            alert(currentLang === 'en' ? "Ordering is only available between 12:00 and 23:00" : "Заказы принимаются только с 12:00 до 23:00");
+            return;
+        }
+        
+        deliveryTimeText = `${date} ${time}`;
+    }
+
     const btn = document.querySelector('button[onclick="submitOrder()"]');
     const originalBtnContent = btn.innerHTML;
     btn.disabled = true;
@@ -1201,6 +1243,7 @@ async function submitOrder() {
                 comment: comment,
                 total_sum: finalPrice,
                 status: 'new',
+                delivery_time: deliveryTimeText,
                 items_json: {
                     cart: cart,
                     order_items: orderDetailsForDb
@@ -1229,7 +1272,8 @@ async function submitOrder() {
         let whatsappText = currentLang === 'en' ? "🍣 *New Mistorsush Order!* 🍣\n\n" : "🍣 *Новый заказ Mistorsush!* 🍣\n\n";
         whatsappText += `*${i18n[currentLang].nameField}:* ${name}\n`;
         whatsappText += `*${i18n[currentLang].phoneField}:* ${phone}\n`;
-        whatsappText += `*${i18n[currentLang].receiving}:* ${orderType === 'delivery' ? i18n[currentLang].delivery + ' 🚚' : i18n[currentLang].pickup + ' 🚶‍♂️'}\n\n`;
+        whatsappText += `*${i18n[currentLang].receiving}:* ${orderType === 'delivery' ? i18n[currentLang].delivery + ' 🚚' : i18n[currentLang].pickup + ' 🚶‍♂️'}\n`;
+        whatsappText += `*Время доставки:* ${deliveryTimeText}\n\n`;
 
         if (orderType === 'delivery') {
             whatsappText += `${i18n[currentLang].whatsappAddress} ${fullAddress}\n\n`;
@@ -1447,6 +1491,26 @@ function closeSettingsModal() {
     if (document.getElementById('confirmNewPassword')) document.getElementById('confirmNewPassword').value = '';
 }
 
+function setOrderTiming(timing) {
+    orderTiming = timing;
+    const indicator = document.getElementById('timingIndicator');
+    const btnASAP = document.getElementById('btnASAP');
+    const btnScheduled = document.getElementById('btnScheduled');
+    const fields = document.getElementById('scheduledFields');
+    
+    if (timing === 'asap') {
+        indicator.style.transform = 'translateX(0)';
+        btnASAP.classList.replace('text-white/40', 'text-white');
+        btnScheduled.classList.replace('text-white', 'text-white/40');
+        fields.classList.add('hidden');
+    } else {
+        indicator.style.transform = 'translateX(100%)';
+        btnScheduled.classList.replace('text-white/40', 'text-white');
+        btnASAP.classList.replace('text-white', 'text-white/40');
+        fields.classList.remove('hidden');
+    }
+}
+
 function openOrderDetailsModal(order) {
     const modal = document.getElementById('orderDetailsModal');
     const content = document.getElementById('orderDetailsModalContent');
@@ -1457,7 +1521,16 @@ function openOrderDetailsModal(order) {
     const date = new Date(order.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'ru-RU');
     document.getElementById('orderDetailsDate').textContent = date;
     document.getElementById('orderDetailsTitle').textContent = (currentLang === 'en' ? 'Order #' : 'Заказ №') + order.id;
-    document.getElementById('orderDetailsContent').innerText = order.items_json.order_items || "";
+    
+    let contentHtml = `<div class="bg-white/5 p-3 rounded-xl border border-white/5 mb-4">
+        <span class="text-[9px] uppercase font-black text-brand tracking-widest block mb-1">Время доставки</span>
+        <span class="text-xs font-bold text-white">${order.delivery_time || 'Как можно скорее'}</span>
+    </div>`;
+    contentHtml += order.items_json.order_items || "";
+    
+    document.getElementById('orderDetailsContent').innerText = ""; 
+    document.getElementById('orderDetailsContent').innerHTML = contentHtml;
+    
     document.getElementById('orderDetailsTotal').textContent = order.total_sum + '₪';
 }
 

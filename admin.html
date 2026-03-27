@@ -937,7 +937,14 @@
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-lg shadow-inner border border-white/10 group-hover:rotate-12 transition-transform">📄</div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-black text-brand uppercase tracking-[0.2em]">Заказ #${order.id}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black text-brand uppercase tracking-[0.2em]">Заказ #${order.id}</span>
+                                    ${order.delivery_time && order.delivery_time !== 'Как можно скорее' ? `
+                                        <span class="bg-amber-500/10 text-amber-500 text-[8px] font-black px-2 py-0.5 rounded-full border border-amber-500/20 uppercase tracking-widest animate-pulse">
+                                            ⏰ ПРЕДЗАКАЗ: ${order.delivery_time}
+                                        </span>
+                                    ` : ''}
+                                </div>
                                 <span class="text-[11px] font-bold text-muted">${date}</span>
                             </div>
                         </div>
