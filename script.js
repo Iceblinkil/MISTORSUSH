@@ -3,6 +3,8 @@ let currentLang = localStorage.getItem('lang') || 'ru';
 let currentCategoryView = 0;
 let isSearchActive = false;
 let searchQuery = '';
+let currentUser = null;
+let authMode = 'login'; // login or register
 
 const S_URL = 'https://iaqbtwsothmkdjapstkq.supabase.co';
 const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcWJ0d3NvdGhta2RqYXBzdGtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjE0ODYsImV4cCI6MjA4OTgzNzQ4Nn0.ye0QGkypstTfxGjCkytn_x7bwsa-2tNiq3EIEulsvV0';
@@ -48,9 +50,6 @@ const i18n = {
         deliveryCostLabel: "Доставка:",
         promo2plus1Popup: "Акция 2+1 (Пятница):",
         free: "Бесплатно!",
-        freeKitBanner: "К каждому набору роллов: соевый соус 2 шт, терияки 2 шт, васаби и имбирь — ",
-        freeUpper: "БЕСПЛАТНО!",
-        freeKitCartName: "Набор специй (Соя, терияки, васаби, имбирь)",
         whatsappOrderTitle: "*Ваш заказ:*",
         whatsappComment: "💬 *Комментарий:*",
         whatsappDelivery: "🛵 *Доставка:*",
@@ -110,9 +109,6 @@ const i18n = {
         deliveryCostLabel: "Delivery:",
         promo2plus1Popup: "Friday 2+1 Promo:",
         free: "Free!",
-        freeKitBanner: "With every roll: 2 soy, 2 teriyaki, wasabi and ginger — ",
-        freeUpper: "FREE!",
-        freeKitCartName: "Sauce Kit (Soy, teriyaki, wasabi, ginger)",
         whatsappOrderTitle: "*Your Order:*",
         whatsappComment: "💬 *Comment:*",
         whatsappDelivery: "🛵 *Delivery:*",
@@ -168,8 +164,13 @@ function toggleLang() {
 
 async function init() {
     applyLanguage();
+    await checkSession();
 
     if (sb) {
+        sb.auth.onAuthStateChange((event, session) => {
+            checkSession();
+        });
+
         try {
             const { data, error } = await sb.from('products').select('*').order('id');
             if (!error && data && data.length > 0) {
@@ -195,7 +196,8 @@ function transformSupabaseData(data) {
                 cat.items.forEach(item => {
                     translationMap[item.name.toLowerCase()] = {
                         nameEn: item.nameEn,
-                        ingredientsEn: item.ingredientsEn
+                        ingredientsEn: item.ingredientsEn,
+                        image: item.image
                     };
                 });
             }
@@ -208,8 +210,7 @@ function transformSupabaseData(data) {
         'unusual_rolls',
         'burgers',
         'gunkan',
-        'drinks',
-        'sauces'
+        'drinks'
     ];
 
     const categoryNamesRu = {
@@ -218,8 +219,7 @@ function transformSupabaseData(data) {
         'unusual_rolls': 'Необычные роллы',
         'burgers': 'Рисовые гамбургеры',
         'gunkan': 'Гункан и суши',
-        'drinks': 'Напитки',
-        'sauces': 'Соусы'
+        'drinks': 'Напитки'
     };
 
     const categoryNamesEn = {
@@ -228,8 +228,7 @@ function transformSupabaseData(data) {
         'unusual_rolls': 'Unusual Rolls',
         'burgers': 'Rice Burgers',
         'gunkan': 'Gunkan and Sushi',
-        'drinks': 'Drinks',
-        'sauces': 'Sauces'
+        'drinks': 'Drinks'
     };
 
     const newMenuData = categoryOrder.map(catSlug => {
@@ -245,7 +244,7 @@ function transformSupabaseData(data) {
                     price: p.price,
                     ingredients: p.description || "",
                     ingredientsEn: trans.ingredientsEn || p.description || "",
-                    image: p.image_url,
+                    image: trans.image || p.image_url,
                     is_available: p.is_available
                 };
             })
@@ -307,7 +306,6 @@ function renderMenu() {
         const isBurgers = currentCategoryView === 3;
         const isGunkan = currentCategoryView === 4;
         const isDrinks = currentCategoryView === 5;
-        const isSauces = currentCategoryView === 6;
 
         if (isClassic) {
             bgColor = 'bg-[#12141a]';
@@ -327,9 +325,6 @@ function renderMenu() {
         } else if (isDrinks) {
             bgColor = 'bg-[#2a2d39]';
             borderColor = 'border-[#3a3e4c]';
-        } else if (isSauces) {
-            bgColor = 'bg-[#211616]';
-            borderColor = 'border-[#3b2323]';
         }
     }
 
@@ -376,7 +371,6 @@ function renderMenu() {
             else if (catName === "Рисовые гамбургеры") { itemBg = 'bg-[#1e1c16]'; itemBorder = 'border-[#332b21]'; }
             else if (catName === "Гункан и суши") { itemBg = 'bg-[#181a1d]'; itemBorder = 'border-[#252a33]'; }
             else if (catName === "Напитки") { itemBg = 'bg-[#2a2d39]'; itemBorder = 'border-[#3a3e4c]'; }
-            else if (catName === "Соусы") { itemBg = 'bg-[#211616]'; itemBorder = 'border-[#3b2323]'; }
         }
 
         const isAvailable = item.is_available !== false;
@@ -418,8 +412,7 @@ function renderDrawer() {
         "Необычные роллы": "✨",
         "Рисовые гамбургеры": "🍔",
         "Гункан и суши": "🥢",
-        "Напитки": "🥤",
-        "Соусы": "🍶"
+        "Напитки": "🥤"
     };
 
     container.innerHTML = menuData.map((cat, index) => {
@@ -731,10 +724,7 @@ function renderCartModalItems() {
 
     let totalItems = 0;
     let totalPrice = 0;
-    let totalRolls = 0;
     let html = '';
-
-    const rollCategories = new Set(menuData.filter(c => c.category === "Классические роллы" || c.category === "Запеченные роллы" || c.category === "Необычные роллы").flatMap(c => c.items.map(i => i.id)));
 
     for (const [id, count] of Object.entries(cart)) {
         if (count > 0) {
@@ -742,7 +732,6 @@ function renderCartModalItems() {
             if (item) {
                 totalItems += count;
                 totalPrice += (item.price * count);
-                if (rollCategories.has(id)) totalRolls += count;
                 html += `
                     <div class="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
                         <div class="flex-1 pr-3">
@@ -764,22 +753,7 @@ function renderCartModalItems() {
         }
     }
 
-    if (totalRolls > 0) {
-        html += `
-            <div class="flex justify-between items-center py-3 border-b border-white/5 last:border-0 bg-[#25D366]/5 -mx-4 px-4 border-t border-t-[#25D366]/20 mt-1">
-                <div class="flex-1 pr-3 flex items-center gap-3">
-                    <span class="text-xl drop-shadow-sm">🎁</span>
-                    <div>
-                        <h4 class="text-[13px] font-bold text-white/90 leading-tight">${i18n[currentLang].freeKitCartName}</h4>
-                        <span class="text-[#25D366] font-bold mt-0.5 inline-block text-[12px] uppercase">0₪</span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-center shrink-0 min-w-8 h-8 px-2 rounded-full bg-white/5 text-white/60 text-xs font-bold ring-1 ring-white/10">
-                    x${totalRolls}
-                </div>
-            </div>
-        `;
-    }
+
 
     if (totalItems === 0) {
         container.innerHTML = `
@@ -1219,7 +1193,7 @@ async function submitOrder() {
         console.log("Начинаю отправку заказа в Supabase...");
 
         if (sb) {
-            const { error } = await sb.from('orders').insert([{
+            const orderData = {
                 customer_name: name,
                 customer_phone: phone,
                 delivery_address: orderType === 'delivery' ? fullAddress : 'Самовывоз',
@@ -1231,7 +1205,13 @@ async function submitOrder() {
                     cart: cart,
                     order_items: orderDetailsForDb
                 }
-            }]);
+            };
+            
+            if (currentUser) {
+                orderData.customer_email = currentUser.email;
+            }
+
+            const { error } = await sb.from('orders').insert([orderData]);
 
             if (error) {
                 alert("Ошибка Supabase: " + error.message);
@@ -1310,4 +1290,338 @@ window.addEventListener('scroll', () => {
 
 function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// User Account & Auth
+async function checkSession() {
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user || null;
+    
+    const indicator = document.getElementById('accountActiveIndicator');
+    if (currentUser) {
+        indicator?.classList.remove('hidden');
+        loadProfileData();
+    } else {
+        indicator?.classList.add('hidden');
+    }
+}
+
+function toggleAuthOrProfile() {
+    if (currentUser) {
+        openProfileModal();
+    } else {
+        openAuthModal();
+    }
+}
+
+function openAuthModal() {
+    const modal = document.getElementById('authModal');
+    const content = document.getElementById('authModalContent');
+    modal.classList.remove('pointer-events-none', 'opacity-0');
+    content.classList.remove('translate-y-full', 'sm:translate-y-10');
+    content.classList.add('translate-y-0');
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    const content = document.getElementById('authModalContent');
+    modal.classList.add('pointer-events-none', 'opacity-0');
+    content.classList.add('translate-y-full', 'sm:translate-y-10');
+    content.classList.remove('translate-y-0');
+}
+
+function toggleAuthMode() {
+    authMode = authMode === 'login' ? 'register' : 'login';
+    const title = document.getElementById('authModalTitle');
+    const btnText = document.getElementById('authSubmitBtn');
+    const toggleBtn = document.getElementById('authToggleBtn');
+    
+    if (authMode === 'login') {
+        title.textContent = currentLang === 'en' ? 'Login' : 'Вход в кабинет';
+        btnText.textContent = currentLang === 'en' ? 'Login' : 'Войти';
+        toggleBtn.textContent = currentLang === 'en' ? "Don't have an account? Register" : "Нет аккаунта? Зарегистрироваться";
+    } else {
+        title.textContent = currentLang === 'en' ? 'Registration' : 'Регистрация';
+        btnText.textContent = currentLang === 'en' ? 'Register' : 'Создать аккаунт';
+        toggleBtn.textContent = currentLang === 'en' ? "Already have an account? Login" : "Уже есть аккаунт? Войти";
+    }
+}
+
+async function handleAuth(event) {
+    event.preventDefault();
+    if (!sb) return;
+    
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const btn = document.getElementById('authSubmitBtn');
+    
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '...';
+    
+    try {
+        if (authMode === 'login') {
+            const { error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+        } else {
+            const { data, error } = await sb.auth.signUp({ email, password });
+            if (error) throw error;
+            
+            // Create user profile in 'profiles' table
+            if (data.user) {
+                const { error: profileError } = await sb.from('profiles').insert([{
+                    id: data.user.id,
+                    email: email,
+                    full_name: '',
+                    phone: '',
+                    address: '',
+                    role: 'user'
+                }]);
+                if (profileError) console.error("Error creating profile:", profileError);
+            }
+
+            alert(currentLang === 'en' ? "Registration successful! You can now login." : "Регистрация успешна! Теперь вы можете войти.");
+            toggleAuthMode();
+            btn.disabled = false;
+            btn.textContent = originalText;
+            return;
+        }
+        closeAuthModal();
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+async function handleLogout() {
+    if (!sb) return;
+    await sb.auth.signOut();
+    currentUser = null;
+    closeProfileModal();
+    window.location.reload();
+}
+
+function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const content = document.getElementById('profileModalContent');
+    modal.classList.remove('pointer-events-none', 'opacity-0');
+    content.classList.remove('translate-y-full', 'sm:translate-y-10');
+    content.classList.add('translate-y-0');
+    
+    if (currentUser) {
+        document.getElementById('profileUserEmail').textContent = currentUser.email;
+        loadProfileData();
+        loadUserOrders();
+    }
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const content = document.getElementById('profileModalContent');
+    modal.classList.add('pointer-events-none', 'opacity-0');
+    content.classList.add('translate-y-full', 'sm:translate-y-10');
+    content.classList.remove('translate-y-0');
+}
+
+async function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    const content = document.getElementById('settingsModalContent');
+    modal.classList.remove('pointer-events-none', 'opacity-0');
+    content.classList.remove('translate-y-full', 'sm:translate-y-10');
+    content.classList.add('translate-y-0');
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    const content = document.getElementById('settingsModalContent');
+    modal.classList.add('pointer-events-none', 'opacity-0');
+    content.classList.add('translate-y-full', 'sm:translate-y-10');
+    content.classList.remove('translate-y-0');
+    
+    // Clear fields
+    if (document.getElementById('oldPassword')) document.getElementById('oldPassword').value = '';
+    if (document.getElementById('newPassword')) document.getElementById('newPassword').value = '';
+    if (document.getElementById('confirmNewPassword')) document.getElementById('confirmNewPassword').value = '';
+}
+
+async function loadProfileData() {
+    if (!currentUser || !sb) return;
+    
+    try {
+        const { data: profile, error } = await sb.from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+            
+        if (error) throw error;
+        if (!profile) return;
+        
+        const name = profile.full_name || "";
+        const phone = profile.phone || "";
+        const address = profile.address || "";
+        const apt = profile.apt || "";
+        const floor = profile.floor || "";
+        const entrance = profile.entrance || "";
+        
+        if (document.getElementById('profileName')) document.getElementById('profileName').value = name;
+        if (document.getElementById('profilePhone')) document.getElementById('profilePhone').value = phone;
+        if (document.getElementById('profileAddress')) document.getElementById('profileAddress').value = address;
+        if (document.getElementById('profileApt')) document.getElementById('profileApt').value = apt;
+        if (document.getElementById('profileFloor')) document.getElementById('profileFloor').value = floor;
+        if (document.getElementById('profileEntrance')) document.getElementById('profileEntrance').value = entrance;
+        
+        document.getElementById('profileUserName').textContent = name || (currentLang === 'en' ? 'Unnamed Gourmet' : 'Инкогнито');
+        
+        // Also auto-fill checkout if empty
+        if (name && document.getElementById('custName') && !document.getElementById('custName').value) {
+            document.getElementById('custName').value = name;
+        }
+        if (phone && document.getElementById('custPhone') && !document.getElementById('custPhone').value) {
+            document.getElementById('custPhone').value = phone;
+        }
+        if (address && document.getElementById('custAddress') && !document.getElementById('custAddress').value) {
+            document.getElementById('custAddress').value = address;
+        }
+        if (apt && document.getElementById('custApt') && !document.getElementById('custApt').value) {
+            document.getElementById('custApt').value = apt;
+        }
+        if (floor && document.getElementById('custFloor') && !document.getElementById('custFloor').value) {
+            document.getElementById('custFloor').value = floor;
+        }
+        if (entrance && document.getElementById('custEntrance') && !document.getElementById('custEntrance').value) {
+            document.getElementById('custEntrance').value = entrance;
+        }
+    } catch (err) {
+        console.error("Error loading profile:", err);
+    }
+}
+
+async function saveProfile() {
+    if (!sb || !currentUser) return;
+    
+    const name = document.getElementById('profileName').value.trim();
+    const phone = document.getElementById('profilePhone').value.trim();
+    const address = document.getElementById('profileAddress').value.trim();
+    const apt = document.getElementById('profileApt').value.trim();
+    const floor = document.getElementById('profileFloor').value.trim();
+    const entrance = document.getElementById('profileEntrance').value.trim();
+    
+    try {
+        const { error } = await sb.from('profiles')
+            .update({ 
+                full_name: name,
+                phone: phone,
+                address: address,
+                apt: apt,
+                floor: floor,
+                entrance: entrance
+            })
+            .eq('id', currentUser.id);
+            
+        if (error) throw error;
+        alert(currentLang === 'en' ? "Profile updated!" : "Данные обновлены!");
+        await checkSession();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+async function changePassword() {
+    if (!sb || !currentUser) return;
+    
+    const oldPass = document.getElementById('oldPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirmPass = document.getElementById('confirmNewPassword').value;
+    
+    if (!oldPass || !newPass || !confirmPass) {
+        alert(currentLang === 'en' ? "All fields required" : "Заполните все поля");
+        return;
+    }
+    
+    if (newPass !== confirmPass) {
+        alert(currentLang === 'en' ? "Passwords don't match" : "Новые пароли не совпадают");
+        return;
+    }
+
+    if (newPass.length < 6) {
+        alert(currentLang === 'en' ? "Password too short" : "Пароль слишком короткий (мин. 6 симв.)");
+        return;
+    }
+    
+    const btn = document.getElementById('changePassBtn');
+    btn.disabled = true;
+    btn.innerText = '...';
+    
+    try {
+        // 1. Verify old password by re-authentication
+        const { error: authError } = await sb.auth.signInWithPassword({
+            email: currentUser.email,
+            password: oldPass
+        });
+        
+        if (authError) throw new Error(currentLang === 'en' ? "Wrong old password" : "Неверный старый пароль");
+        
+        // 2. Update to new password
+        const { error: updateError } = await sb.auth.updateUser({
+            password: newPass
+        });
+        
+        if (updateError) throw updateError;
+        
+        alert(currentLang === 'en' ? "Password successfully changed!" : "Пароль успешно изменен!");
+        
+        closeSettingsModal();
+        
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = currentLang === 'en' ? 'Update Password' : 'Обновить пароль';
+    }
+}
+
+async function loadUserOrders() {
+    if (!sb || !currentUser) return;
+    
+    const container = document.getElementById('userOrderHistory');
+    container.innerHTML = '<div class="text-center py-4 text-muted animate-pulse">⏳...</div>';
+    
+    try {
+        const { data, error } = await sb.from('orders')
+            .select('*')
+            .eq('customer_email', currentUser.email)
+            .order('created_at', { ascending: false })
+            .limit(10);
+            
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div class="text-center py-8 text-muted text-[10px] uppercase font-bold tracking-widest opacity-50 italic">${currentLang === 'en' ? 'No orders yet...' : 'Заказов пока нет...'}</div>`;
+            return;
+        }
+        
+        container.innerHTML = data.map(order => {
+            const date = new Date(order.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'ru-RU');
+            const statusColor = order.status === 'new' ? 'text-brand' : 'text-emerald-500';
+            const statusText = order.status === 'new' ? (currentLang === 'en' ? 'New' : 'Новый') : (currentLang === 'en' ? 'Completed' : 'Завершен');
+            
+            return `
+                <div class="bg-card/50 border border-white/5 rounded-2xl p-4 space-y-2 group hover:border-brand/20 transition-all">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-black uppercase text-muted tracking-widest">${date}</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest ${statusColor} bg-white/5 px-2 py-0.5 rounded-full">${statusText}</span>
+                    </div>
+                    <div class="text-[12px] font-bold text-white/80 line-clamp-1">${order.total_sum}₪ • ${order.order_type}</div>
+                    <div class="text-[9px] text-muted font-medium line-clamp-2 italic opacity-60">${order.items_json.order_items.split('\n')[0]}...</div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (err) {
+        container.innerHTML = `<div class="text-center py-4 text-brand text-[8px] uppercase font-black tracking-widest">Error loading orders</div>`;
+        console.error(err);
+    }
 }

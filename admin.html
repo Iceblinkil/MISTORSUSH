@@ -60,37 +60,45 @@
 
 <body class="bg-dark text-white antialiased min-h-screen custom-scrollbar relative">
     <!-- Auth Overlay -->
-    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-dark flex items-center justify-center p-4 animate-fade-in group">
+    <div id="auth-overlay"
+        class="fixed inset-0 z-[100] bg-dark flex items-center justify-center p-4 animate-fade-in group">
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand/10 blur-[100px] rounded-full animate-pulse"></div>
-            <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-brand/5 blur-[100px] rounded-full animate-pulse delay-700"></div>
+            <div
+                class="absolute -left-20 -bottom-20 w-80 h-80 bg-brand/5 blur-[100px] rounded-full animate-pulse delay-700">
+            </div>
         </div>
 
-        <div class="w-full max-w-md bg-card border border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] relative z-10 backdrop-blur-xl">
+        <div
+            class="w-full max-w-md bg-card border border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] relative z-10 backdrop-blur-xl">
             <div class="text-center mb-10">
-                <div class="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner border border-brand/20">🍣</div>
+                <div
+                    class="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner border border-brand/20">
+                    🍣</div>
                 <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase italic">
                     MISTOR<span class="text-brand">SUSH</span>
                 </h1>
-                <p class="text-muted text-[10px] font-black uppercase tracking-[0.3em] mt-2 opacity-60">Admin Security Layer</p>
+                <p class="text-muted text-[10px] font-black uppercase tracking-[0.3em] mt-2 opacity-60">Admin Security
+                    Layer</p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-6">
                 <div class="space-y-1.5">
                     <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Email</label>
                     <input type="email" id="auth-email" required placeholder="admin@example.com"
-                           class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
+                        class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Пароль</label>
                     <input type="password" id="auth-password" required placeholder="••••••••"
-                           class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
+                        class="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium">
                 </div>
                 <button type="submit" id="login-btn"
-                        class="w-full py-4 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-[0.98] shadow-xl shadow-white/5 uppercase text-xs tracking-[0.2em] transform">
+                    class="w-full py-4 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-[0.98] shadow-xl shadow-white/5 uppercase text-xs tracking-[0.2em] transform">
                     Войти в панель
                 </button>
-                <div id="auth-error" class="text-center text-brand text-[10px] font-black uppercase tracking-widest hidden animate-bounce">
+                <div id="auth-error"
+                    class="text-center text-brand text-[10px] font-black uppercase tracking-widest hidden animate-bounce">
                     Неверный логин или пароль
                 </div>
             </form>
@@ -98,7 +106,8 @@
     </div>
 
     <div id="main-content" class="max-w-4xl mx-auto pb-20 hidden">
-        <header class="mb-4 flex flex-col items-center bg-dark/80 backdrop-blur-xl py-4 -mx-4 px-4 border-b border-white/5">
+        <header
+            class="mb-4 flex flex-col items-center bg-dark/80 backdrop-blur-xl py-4 -mx-4 px-4 border-b border-white/5">
             <div class="flex items-center gap-4 w-full justify-between">
                 <button onclick="openDrawer()"
                     class="p-2 -ml-2 text-white/70 hover:text-brand transition-all hover:scale-110 active:scale-90 relative">
@@ -106,21 +115,26 @@
                         stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
-                    <div id="new-orders-indicator" class="hidden absolute top-1 right-1 w-3 h-3 bg-brand border-2 border-dark rounded-full"></div>
+                    <div id="new-orders-indicator"
+                        class="hidden absolute top-1 right-1 w-3 h-3 bg-brand border-2 border-dark rounded-full"></div>
                 </button>
                 <div onclick="showView('dashboard')" class="flex flex-col items-center flex-grow cursor-pointer group">
-                    <h1 class="text-xl md:text-2xl font-black tracking-[0.3em] uppercase transition-all group-hover:scale-105">
+                    <h1
+                        class="text-xl md:text-2xl font-black tracking-[0.3em] uppercase transition-all group-hover:scale-105">
                         MISTOR<span class="text-brand">SUSH</span>
                     </h1>
                     <div class="w-8 h-1 bg-brand rounded-full transition-all group-hover:w-16"></div>
                 </div>
                 <button onclick="handleLogout()" class="text-muted hover:text-brand transition-all p-2 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 transform group-hover:-translate-x-1"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                     </svg>
                 </button>
             </div>
-            <div id="status-msg" class="mt-2 text-[8px] font-black uppercase tracking-[0.3em] text-[#25D366]/80 text-center w-full">
+            <div id="status-msg"
+                class="mt-2 text-[8px] font-black uppercase tracking-[0.3em] text-[#25D366]/80 text-center w-full">
                 Система активна
             </div>
         </header>
@@ -131,36 +145,58 @@
                 <h2 class="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">
                     Панель <span class="text-brand">Управления</span>
                 </h2>
-                <p class="text-muted text-xs md:text-sm uppercase tracking-[0.3em] font-bold opacity-50">Выберите раздел для работы</p>
+                <p class="text-muted text-xs md:text-sm uppercase tracking-[0.3em] font-bold opacity-50">Выберите раздел
+                    для работы</p>
             </div>
 
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <button onclick="showView('orders')" 
-                        class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
-                    <div class="absolute -right-16 -top-16 w-48 h-48 bg-brand/10 blur-[80px] rounded-full group-hover:bg-brand/20 transition-all"></div>
-                    <div class="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">📋</div>
+                <button onclick="showView('orders')"
+                    class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
+                    <div
+                        class="absolute -right-16 -top-16 w-48 h-48 bg-brand/10 blur-[80px] rounded-full group-hover:bg-brand/20 transition-all">
+                    </div>
+                    <div
+                        class="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">
+                        📋</div>
                     <div>
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Заказы</h3>
-                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Просмотр новых заявок, адресов доставки и состава заказов.</p>
+                        <h3
+                            class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">
+                            Заказы</h3>
+                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Просмотр новых заявок,
+                            адресов доставки и состава заказов.</p>
                     </div>
                 </button>
 
-                <button onclick="showView('products')" 
-                        class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
-                    <div class="absolute -right-16 -top-16 w-48 h-48 bg-white/5 blur-[80px] rounded-full group-hover:bg-white/10 transition-all"></div>
-                    <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">🍱</div>
+                <button onclick="showView('products')"
+                    class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98]">
+                    <div
+                        class="absolute -right-16 -top-16 w-48 h-48 bg-white/5 blur-[80px] rounded-full group-hover:bg-white/10 transition-all">
+                    </div>
+                    <div
+                        class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">
+                        🍱</div>
                     <div>
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Меню</h3>
-                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Управление ассортиментом: редактирование цен, названий и категорий.</p>
+                        <h3
+                            class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">
+                            Меню</h3>
+                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">Управление
+                            ассортиментом: редактирование цен, названий и категорий.</p>
                     </div>
                 </button>
-                <button onclick="showView('completed-orders')" 
-                        class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98] md:col-span-2 lg:col-span-1">
-                    <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-all"></div>
-                    <div class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">✅</div>
+                <button onclick="showView('completed-orders')"
+                    class="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-6 active:scale-[0.98] md:col-span-2 lg:col-span-1">
+                    <div
+                        class="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-all">
+                    </div>
+                    <div
+                        class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500">
+                        ✅</div>
                     <div>
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-emerald-500 transition-colors">Архив</h3>
-                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">История всех завершенных заказов. Просмотр выполненных доставок и чеков.</p>
+                        <h3
+                            class="text-2xl font-black text-white uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
+                            Архив</h3>
+                        <p class="text-muted text-sm mt-2 font-medium leading-relaxed opacity-60">История всех
+                            завершенных заказов. Просмотр выполненных доставок и чеков.</p>
                     </div>
                 </button>
             </div>
@@ -175,91 +211,98 @@
             </nav>
             <!-- Toggle Button -->
             <button id="toggle-form-btn" onclick="toggleAddForm()"
-            class="w-full py-5 bg-gradient-to-r from-brand to-[#ff4d5a] hover:brightness-110 text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all active:scale-[0.98] mb-8 flex items-center justify-center gap-4 border border-white/10">
-            <span id="toggle-icon" class="text-2xl filter drop-shadow-md">➕</span>
-            <span class="uppercase tracking-widest text-sm">Добавить новый товар</span>
-        </button>
+                class="w-full py-5 bg-gradient-to-r from-brand to-[#ff4d5a] hover:brightness-110 text-white font-black rounded-2xl shadow-xl shadow-brand/20 transition-all active:scale-[0.98] mb-8 flex items-center justify-center gap-4 border border-white/10">
+                <span id="toggle-icon" class="text-2xl filter drop-shadow-md">➕</span>
+                <span class="uppercase tracking-widest text-sm">Добавить новый товар</span>
+            </button>
 
-        <!-- Form Container -->
-        <div id="add-form-container"
-            class="hidden mb-12 bg-card border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl animate-[slideDown_0.3s_ease-out] relative overflow-hidden">
-            <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand/5 blur-[40px] rounded-full"></div>
+            <!-- Form Container -->
+            <div id="add-form-container"
+                class="hidden mb-12 bg-card border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl animate-[slideDown_0.3s_ease-out] relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand/5 blur-[40px] rounded-full"></div>
 
-            <form id="add-form" onsubmit="addProduct(event)" class="relative z-10 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Название</label>
-                        <input type="text" name="name" required placeholder="Напр: Филадельфия"
-                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Цена (₪)</label>
-                        <input type="number" name="price" required step="0.01" placeholder="0.00"
-                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Категория</label>
-                        <select name="category" required
-                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all appearance-none cursor-pointer text-white/90">
-                            <option value="" disabled selected>Выберите из списка</option>
-                            <option value="classic_rolls">🍣 Классические роллы</option>
-                            <option value="baked_rolls">🔥 Запеченные роллы</option>
-                            <option value="unusual_rolls">✨ Необычные роллы</option>
-                            <option value="burgers">🍔 Рисовые гамбургеры</option>
-                            <option value="gunkan">🥢 Гункан и суши</option>
-                            <option value="drinks">🥤 Напитки</option>
-                            <option value="sauces">🍶 Соусы</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Вес (г)</label>
-                        <input type="number" name="weight_grams" placeholder="Опционально"
-                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">URL Картинки</label>
-                    <input type="text" name="image_url" placeholder="img/rolls/example.webp"
-                        class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Описание</label>
-                    <textarea name="description" rows="3" placeholder="Состав и особенности..."
-                        class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all resize-none placeholder:text-white/10"></textarea>
-                </div>
-
-                <div class="flex items-center justify-between pt-2">
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                        <div class="relative">
-                            <input type="checkbox" name="is_available" checked class="sr-only peer">
-                            <div
-                                class="w-10 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-brand/20 transition-all">
-                            </div>
-                            <div
-                                class="absolute left-1 top-1 w-4 h-4 bg-muted rounded-full peer-checked:translate-x-4 peer-checked:bg-brand transition-all shadow-sm">
-                            </div>
+                <form id="add-form" onsubmit="addProduct(event)" class="relative z-10 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Название</label>
+                            <input type="text" name="name" required placeholder="Напр: Филадельфия"
+                                class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
                         </div>
-                        <span class="text-xs font-bold text-muted group-hover:text-white transition-colors uppercase tracking-widest">Доступен
-                            в меню</span>
-                    </label>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Цена
+                                (₪)</label>
+                            <input type="number" name="price" required step="0.01" placeholder="0.00"
+                                class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
+                        </div>
+                    </div>
 
-                    <button type="submit"
-                        class="px-8 py-3 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-95 shadow-lg uppercase text-xs tracking-widest">
-                        Создать товар
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label
+                                class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Категория</label>
+                            <select name="category" required
+                                class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all appearance-none cursor-pointer text-white/90">
+                                <option value="" disabled selected>Выберите из списка</option>
+                                <option value="classic_rolls">🍣 Классические роллы</option>
+                                <option value="baked_rolls">🔥 Запеченные роллы</option>
+                                <option value="unusual_rolls">✨ Необычные роллы</option>
+                                <option value="burgers">🍔 Рисовые гамбургеры</option>
+                                <option value="gunkan">🥢 Гункан и суши</option>
+                                <option value="drinks">🥤 Напитки</option>
+
+                            </select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Вес
+                                (г)</label>
+                            <input type="number" name="weight_grams" placeholder="Опционально"
+                                class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">URL
+                            Картинки</label>
+                        <input type="text" name="image_url" placeholder="img/rolls/example.webp"
+                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/10">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Описание</label>
+                        <textarea name="description" rows="3" placeholder="Состав и особенности..."
+                            class="w-full bg-dark/50 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand/50 outline-none transition-all resize-none placeholder:text-white/10"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" name="is_available" checked class="sr-only peer">
+                                <div
+                                    class="w-10 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:bg-brand/20 transition-all">
+                                </div>
+                                <div
+                                    class="absolute left-1 top-1 w-4 h-4 bg-muted rounded-full peer-checked:translate-x-4 peer-checked:bg-brand transition-all shadow-sm">
+                                </div>
+                            </div>
+                            <span
+                                class="text-xs font-bold text-muted group-hover:text-white transition-colors uppercase tracking-widest">Доступен
+                                в меню</span>
+                        </label>
+
+                        <button type="submit"
+                            class="px-8 py-3 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-95 shadow-lg uppercase text-xs tracking-widest">
+                            Создать товар
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Product List -->
             <div id="menu-list" class="space-y-12">
                 <div class="flex flex-col items-center justify-center py-20 text-muted">
-                    <div class="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full mb-4"></div>
+                    <div class="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full mb-4">
+                    </div>
                     <p class="text-xs uppercase tracking-[0.2em] font-bold">Подготовка меню...</p>
                 </div>
             </div>
@@ -267,14 +310,16 @@
 
         <!-- Orders View -->
         <div id="orders-view" class="hidden space-y-12 animate-fade-in">
-            <h2 class="text-2xl font-bold mb-10 tracking-tight text-white/90 flex items-center justify-center gap-4 text-center uppercase text-[22px] scroll-mt-32">
+            <h2
+                class="text-2xl font-bold mb-10 tracking-tight text-white/90 flex items-center justify-center gap-4 text-center uppercase text-[22px] scroll-mt-32">
                 <div class="h-px bg-white/10 flex-grow"></div>
                 Список заказов
                 <div class="h-px bg-white/10 flex-grow"></div>
             </h2>
             <div id="orders-list" class="space-y-6">
                 <div class="flex flex-col items-center justify-center py-20 text-muted">
-                    <div class="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full mb-4"></div>
+                    <div class="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full mb-4">
+                    </div>
                     <p class="text-xs uppercase tracking-[0.2em] font-bold">Загрузка заказов...</p>
                 </div>
             </div>
@@ -282,7 +327,8 @@
 
         <!-- Completed Orders View -->
         <div id="completed-orders-view" class="hidden space-y-12 animate-fade-in">
-            <h2 class="text-2xl font-bold mb-4 tracking-tight text-white/40 flex items-center justify-center gap-4 text-center uppercase text-[22px] scroll-mt-32">
+            <h2
+                class="text-2xl font-bold mb-4 tracking-tight text-white/40 flex items-center justify-center gap-4 text-center uppercase text-[22px] scroll-mt-32">
                 <div class="h-px bg-white/5 flex-grow"></div>
                 Завершенные заказы
                 <div class="h-px bg-white/5 flex-grow"></div>
@@ -290,16 +336,26 @@
 
             <!-- Archive Filters -->
             <div id="archive-filters" class="flex flex-wrap items-center justify-center gap-2 mb-8 animate-fade-in">
-                <button onclick="changeArchiveFilter('all')" id="filter-all" class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-white/10 text-white border border-white/20">Все</button>
-                <button onclick="changeArchiveFilter('day')" id="filter-day" class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За день</button>
-                <button onclick="changeArchiveFilter('week')" id="filter-week" class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За неделю</button>
-                <button onclick="changeArchiveFilter('month')" id="filter-month" class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За месяц</button>
-                <button onclick="changeArchiveFilter('year')" id="filter-year" class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За год</button>
+                <button onclick="changeArchiveFilter('all')" id="filter-all"
+                    class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-white/10 text-white border border-white/20">Все</button>
+                <button onclick="changeArchiveFilter('day')" id="filter-day"
+                    class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За
+                    день</button>
+                <button onclick="changeArchiveFilter('week')" id="filter-week"
+                    class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За
+                    неделю</button>
+                <button onclick="changeArchiveFilter('month')" id="filter-month"
+                    class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За
+                    месяц</button>
+                <button onclick="changeArchiveFilter('year')" id="filter-year"
+                    class="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all bg-transparent text-muted border border-transparent hover:bg-white/5 hover:text-white">За
+                    год</button>
             </div>
 
             <div id="completed-orders-list" class="space-y-6 opacity-80">
                 <div class="flex flex-col items-center justify-center py-20 text-muted">
-                    <div class="animate-spin w-8 h-8 border-4 border-white/20 border-t-white/40 rounded-full mb-4"></div>
+                    <div class="animate-spin w-8 h-8 border-4 border-white/20 border-t-white/40 rounded-full mb-4">
+                    </div>
                     <p class="text-xs uppercase tracking-[0.2em] font-bold">Загрузка архива...</p>
                 </div>
             </div>
@@ -372,8 +428,9 @@
             <div class="flex-grow overflow-y-auto px-4 py-8 space-y-2 custom-scrollbar" id="drawerLinks">
                 <!-- Populated via JS -->
             </div>
-            
-            <div class="p-6 border-t border-white/5 text-center text-muted text-[10px] tracking-widest uppercase font-black">
+
+            <div
+                class="p-6 border-t border-white/5 text-center text-muted text-[10px] tracking-widest uppercase font-black">
                 Mistorsush Admin
             </div>
         </div>
@@ -400,8 +457,7 @@
             'unusual_rolls',
             'burgers',
             'gunkan',
-            'drinks',
-            'sauces'
+            'drinks'
         ];
 
         const categoryNames = {
@@ -410,8 +466,7 @@
             'unusual_rolls': '✨ Необычные роллы',
             'burgers': '🍔 Рисовые гамбургеры',
             'gunkan': '🥢 Гункан и суши',
-            'drinks': '🥤 Напитки',
-            'sauces': '🍶 Соусы'
+            'drinks': '🥤 Напитки'
         };
 
         async function load() {
@@ -437,7 +492,7 @@
             // Populate Navs
             let navHtml = '';
             let drawerHtml = '';
-            
+
             const handleNav = (cat, prods) => {
                 const name = categoryNames[cat] || cat;
                 navHtml += `<button onclick="scrollToCategory('${cat}')" class="whitespace-nowrap px-4 py-2 bg-card border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted hover:text-brand transition-all active:scale-95 shadow-sm">${name}</button>`;
@@ -705,7 +760,7 @@
         function handleSearch(query) {
             const q = query.trim().toLowerCase();
             const cards = document.querySelectorAll('.product-card');
-            
+
             cards.forEach(card => {
                 const name = card.dataset.name;
                 if (name.includes(q)) {
@@ -794,7 +849,7 @@
 
         function changeArchiveFilter(filter) {
             currentArchiveFilter = filter;
-            
+
             const filters = ['all', 'day', 'week', 'month', 'year'];
             filters.forEach(f => {
                 const btn = document.getElementById('filter-' + f);
@@ -808,7 +863,7 @@
                     }
                 }
             });
-            
+
             loadCompletedOrders();
         }
 
@@ -835,7 +890,7 @@
                     // Start of this year
                     filterDate = new Date(now.getFullYear(), 0, 1);
                 }
-                
+
                 if (filterDate) {
                     query = query.gte('created_at', filterDate.toISOString());
                 }
@@ -861,7 +916,7 @@
                 day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
             });
             const itemsData = order.items_json || {};
-            
+
             const customerName = order.customer_name || itemsData.customer_name || "Не указано";
             const customerPhone = order.customer_phone || itemsData.customer_phone || "Нет номера";
             const rawOrderType = order.order_type || itemsData.order_type || "delivery";
@@ -889,10 +944,10 @@
                         <div class="flex items-center gap-2">
                              <select onchange="updateStatus('${order.id}', this.value)" 
                                     class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest cursor-pointer outline-none border border-white/10 transition-all shadow-lg
-                                    ${order.status === 'new' ? 'bg-brand/10 text-brand border-brand/20' : 
-                                      order.status === 'Готовится' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                                      order.status === 'Курьер в пути' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 
-                                      'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}">
+                                    ${order.status === 'new' ? 'bg-brand/10 text-brand border-brand/20' :
+                    order.status === 'Готовится' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                        order.status === 'Курьер в пути' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}">
                                 <option value="new" ${order.status === 'new' ? 'selected' : ''}>🆕 Новый</option>
                                 <option value="Готовится" ${order.status === 'Готовится' ? 'selected' : ''}>🔥 Готовится</option>
                                 <option value="Курьер в пути" ${order.status === 'Курьер в пути' ? 'selected' : ''}>🛵 В пути</option>
@@ -999,9 +1054,23 @@
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
+                // Check if user is an admin in profiles table
+                const { data: profile, error: profileError } = await sb.from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profileError || !profile || profile.role !== 'admin') {
+                    console.error("Admin access denied:", profileError);
+                    alert("Доступ запрещен. У вас нет прав администратора.");
+                    await sb.auth.signOut();
+                    window.location.reload();
+                    return;
+                }
+
                 document.getElementById('auth-overlay').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
-                
+
                 // Only show dashboard if no other view is currently visible
                 const currentVisibleView = ['products', 'orders', 'completed-orders'].find(v => !document.getElementById(v + '-view').classList.contains('hidden'));
                 if (!currentVisibleView) {
@@ -1057,7 +1126,7 @@
             views.forEach(v => {
                 const el = document.getElementById(v + '-view');
                 if (el) el.classList.add('hidden');
-                
+
                 const btn = navButtons[v];
                 if (btn) {
                     btn.classList.remove('bg-brand', 'text-white', 'shadow-brand/20');
@@ -1067,7 +1136,7 @@
 
             const activeView = document.getElementById(view + '-view');
             if (activeView) activeView.classList.remove('hidden');
-            
+
             const activeBtn = navButtons[view];
             if (activeBtn) {
                 activeBtn.classList.add('bg-brand', 'text-white', 'shadow-brand/20');
@@ -1096,12 +1165,12 @@
                     if (ordersView && !ordersView.classList.contains('hidden')) {
                         loadOrders();
                     }
-                    
+
                     const completedView = document.getElementById('completed-orders-view');
                     if (completedView && !completedView.classList.contains('hidden')) {
                         loadCompletedOrders();
                     }
-                    
+
                     // Show a notification if it's a new order
                     if (payload.eventType === 'INSERT') {
                         const indicator = document.getElementById('new-orders-indicator');
@@ -1112,7 +1181,7 @@
             .subscribe();
 
         checkSession();
-        
+
         // Listen for auth changes
         sb.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') checkSession();
