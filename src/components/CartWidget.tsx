@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 export function CartWidget({ onOpenCart }: { onOpenCart: () => void }) {
   const t = useTranslations();

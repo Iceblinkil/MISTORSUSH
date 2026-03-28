@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useLocale } from 'next-intl';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 export interface Category {
   slug: string;

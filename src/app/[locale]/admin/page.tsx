@@ -16,7 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { ProductEditorModal } from '@/components/ProductEditorModal';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 export default function AdminPage() {
   const t = useTranslations();

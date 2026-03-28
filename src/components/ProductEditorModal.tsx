@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Product } from '@/types';
 import { Modal } from '@/components/Modal';
 import { Image as ImageIcon, Loader2, Save, Trash2, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 interface ProductEditorModalProps {
   product: Product | null;

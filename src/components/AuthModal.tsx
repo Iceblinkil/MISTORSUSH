@@ -6,7 +6,7 @@ import { Mail, Lock, User, LogIn, UserPlus, AlertCircle, Loader2 } from 'lucide-
 import { supabase } from '@/lib/supabase';
 import { Modal } from '@/components/Modal';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 interface AuthModalProps {
   isOpen: boolean;

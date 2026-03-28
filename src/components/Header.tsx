@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const t = useTranslations();

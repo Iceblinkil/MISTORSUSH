@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Truck, Store, MapPin, MessageCircle, ArrowLeft } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { useCart } from '@/context/CartContext';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 interface CheckoutModalProps {
   isOpen: boolean;
