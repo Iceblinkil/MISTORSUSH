@@ -13,7 +13,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { ShoppingBag, X, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/app/[locale]/layout';
+import { cn } from '@/lib/utils';
 
 export default function Home({ params }: { params: Promise<{ locale: string }> }) {
   const t = useTranslations();
