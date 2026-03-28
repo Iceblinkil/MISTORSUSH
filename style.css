@@ -66,3 +66,56 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+/* Accessibility Modes */
+.accessibility-monochrome { filter: grayscale(100%) !important; }
+.accessibility-sepia { filter: sepia(100%) !important; }
+.accessibility-contrast { filter: contrast(180%) !important; }
+.accessibility-invert { filter: invert(100%) !important; }
+
+.accessibility-stop-animations *,
+.accessibility-stop-animations *::before,
+.accessibility-stop-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.accessibility-highlight-links a {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  outline: 2px solid #ff0000 !important;
+}
+
+.accessibility-highlight-headings h1, 
+.accessibility-highlight-headings h2, 
+.accessibility-highlight-headings h3 {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  outline: 2px solid #ff0000 !important;
+}
+
+.accessibility-readable-font * {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.accessibility-panel-active {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+#accessibilityModal .active-mode {
+  background-color: #2b6cb0 !important; /* Blue from standard accessibility tools */
+  color: white !important;
+}
+
+.accessibility-check-mark {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #25D366;
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}

@@ -69,7 +69,19 @@ const i18n = {
         noResults: "Ничего не найдено :(",
         outOfStock: "Нет в наличии",
         receiving: "Получение",
-        freeDelivery: "БЕСПЛАТНО"
+        freeDelivery: "БЕСПЛАТНО",
+        accessibilityTitle: "Доступность",
+        monochromeLabel: "Черно-белый режим",
+        fontSizeLabel: "Размер шрифта",
+        resetAccessibility: "Сбросить всё",
+        modeStopAnimations: "Без анимаций",
+        modeMonochrome: "Монохром",
+        modeContrast: "Контраст",
+        modeInvert: "Инверсия",
+        modeReadableFont: "Шрифт Arial",
+        modeHighlightLinks: "Ссылки",
+        modeSepia: "Сепия",
+        modeScreenReader: "Чтение вслух"
     },
     en: {
         subtitle: "Sushi in Ashkelon",
@@ -98,23 +110,23 @@ const i18n = {
         courierFee: "Courier fee:",
         freeDeliveryNotice: "Free delivery for orders over 250₪!",
         addressField: "City, Street and House",
-        addressPlaceholder: "Ashkelon, Ben Gurion St 12",
-        aptField: "Apt",
+        addressPlaceholder: "Ashkelon, 12 Ben Gurion St",
+        aptField: "Apartment",
         floorField: "Floor",
         entranceField: "Entrance",
         commentField: "Order Comment",
-        commentPlaceholder: "e.g., no onion, call 5 mins before...",
+        commentPlaceholder: "E.g., no onion, call 5 min before...",
         sendWhatsapp: "Send to WhatsApp",
-        subtotal: "Subtotal:",
-        discount2plus1: "2+1 Discount:",
+        subtotal: "Order subtotal:",
+        discount2plus1: "Discount 2+1:",
         deliveryCostLabel: "Delivery:",
-        promo2plus1Popup: "Friday 2+1 Promo:",
+        promo2plus1Popup: "Friday Deal 2+1:",
         free: "Free!",
         whatsappOrderTitle: "*Your Order:*",
         whatsappComment: "💬 *Comment:*",
         whatsappDelivery: "🛵 *Delivery:*",
-        whatsappPromo: "🎁 *Friday 2+1 Promo:*",
-        whatsappTotal: "💰 *Total to pay:*",
+        whatsappPromo: "🎁 *Friday 2+1:*",
+        whatsappTotal: "💰 *Total:*",
         whatsappPickup: "🛒 *Pickup*",
         whatsappAddress: "📍 *Address:*",
         whatsappApt: "Apt.",
@@ -124,11 +136,15 @@ const i18n = {
         upsellNoThanks: "No thanks",
         upsellCheckoutBtn: "Go to cart",
         searchPlaceholder: "Search...",
-        searchResults: "Search Results",
+        searchResults: "Search results",
         noResults: "Nothing found :(",
-        outOfStock: "Out of Stock",
+        outOfStock: "Out of stock",
         receiving: "Receiving",
-        freeDelivery: "FREE"
+        freeDelivery: "FREE",
+        accessibilityTitle: "Accessibility",
+        monochromeLabel: "Monochrome Mode",
+        fontSizeLabel: "Font Size",
+        resetAccessibility: "Reset Settings"
     }
 };
 
@@ -1819,3 +1835,143 @@ function closeImageModal() {
         document.body.style.overflow = '';
     }, 300);
 }
+
+// Accessibility Functions
+let fontSizeLevel = 1;
+const activeModes = new Set();
+
+function toggleAccessibilityModal() {
+    const modal = document.getElementById('accessibilityModal');
+    const content = document.getElementById('accessibilityPanelContent');
+    if (!modal) return;
+
+    if (modal.classList.contains('opacity-0')) {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('translate-y-20');
+        content.classList.add('translate-y-0');
+        document.body.style.overflow = 'hidden';
+    } else {
+        content.classList.remove('translate-y-0');
+        content.classList.add('translate-y-20');
+        setTimeout(() => {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+function toggleAccessMode(mode, el) {
+    const className = `accessibility-${mode}`;
+    const isActive = document.body.classList.toggle(className);
+    
+    if (isActive) {
+        activeModes.add(mode);
+        if (el) el.classList.add('active-mode', 'ring-2', 'ring-blue-500');
+    } else {
+        activeModes.delete(mode);
+        if (el) el.classList.remove('active-mode', 'ring-2', 'ring-blue-500');
+    }
+    
+    updateAccessibilityTrigger();
+}
+
+function updateAccessibilityTrigger() {
+    const trigger = document.getElementById('accessibilityToggle');
+    const existingCheck = trigger.querySelector('.accessibility-check-mark');
+    
+    if (activeModes.size > 0 || fontSizeLevel !== 1) {
+        if (!existingCheck) {
+            const check = document.createElement('div');
+            check.className = 'accessibility-check-mark';
+            check.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="4" stroke="white" class="w-2 h-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+            `;
+            trigger.appendChild(check);
+            trigger.classList.add('border-blue-500');
+        }
+    } else {
+        if (existingCheck) existingCheck.remove();
+        trigger.classList.remove('border-blue-500');
+    }
+}
+
+function adjustFontSize(direction) {
+    if (direction === 'plus' && fontSizeLevel < 1.4) {
+        fontSizeLevel += 0.1;
+    } else if (direction === 'minus' && fontSizeLevel > 0.8) {
+        fontSizeLevel -= 0.1;
+    }
+    updateFontSize();
+}
+
+function resetFontSize() {
+    fontSizeLevel = 1;
+    updateFontSize();
+}
+
+function updateFontSize() {
+    document.documentElement.style.fontSize = fontSizeLevel + 'em';
+    updateAccessibilityTrigger();
+}
+
+function resetAccessibility() {
+    // Clear all mode classes
+    activeModes.forEach(mode => {
+        document.body.classList.remove(`accessibility-${mode}`);
+    });
+    activeModes.clear();
+    
+    // Stop speaking
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    
+    // Clear UI active states
+    const buttons = document.querySelectorAll('#accessibilityModal .active-mode');
+    buttons.forEach(btn => btn.classList.remove('active-mode', 'ring-2', 'ring-blue-500'));
+    
+    resetFontSize();
+}
+
+// Screen Reader Helper
+let lastSpokenText = "";
+function initScreenReader() {
+    const handleSpeak = (e) => {
+        if (!activeModes.has('screen-reader')) return;
+        
+        let target = e.target.closest('p, h1, h2, h3, h4, span, button, a, label');
+        if (!target) return;
+        
+        const text = target.innerText || target.getAttribute('aria-label') || target.getAttribute('title');
+        if (text && text !== lastSpokenText) {
+            lastSpokenText = text;
+            speakText(text);
+        }
+    };
+
+    document.addEventListener('mouseover', handleSpeak);
+    document.addEventListener('click', (e) => {
+        if (activeModes.has('screen-reader')) {
+            // Stop current speech and force immediate read on click
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            handleSpeak(e);
+        }
+    });
+}
+
+function speakText(text) {
+    if (!window.speechSynthesis) return;
+    
+    // Cancel any current speech
+    window.speechSynthesis.cancel();
+    
+    const uttr = new SpeechSynthesisUtterance(text);
+    uttr.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US';
+    uttr.rate = 1.0;
+    uttr.pitch = 1.0;
+    
+    window.speechSynthesis.speak(uttr);
+}
+
+// Initialize on load
+initScreenReader();
