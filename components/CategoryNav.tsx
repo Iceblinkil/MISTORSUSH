@@ -1,6 +1,6 @@
 'use client';
 
-import { MenuCategory } from '@/lib/menuData';
+import { MenuCategory, getCategoryName } from '@/lib/menuData';
 import { useLang } from '@/context/LangContext';
 
 interface CategoryNavProps {
@@ -32,7 +32,7 @@ export default function CategoryNav({
                 : 'text-muted border-white/5 bg-card hover:bg-white/5'
             }`}
           >
-            {lang === 'en' ? cat.categoryEn : cat.category}
+            {getCategoryName(cat, lang)}
           </button>
         );
       })}

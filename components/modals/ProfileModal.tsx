@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '@/context/LangContext';
 import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import OrderDetailsModal from './OrderDetailsModal';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -36,6 +37,10 @@ export default function ProfileModal({ isOpen, onClose, onLogout, currentUser }:
   const [confirmPass, setConfirmPass] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPass, setChangingPass] = useState(false);
+
+  // Order Details State
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && currentUser) {
@@ -112,6 +117,11 @@ export default function ProfileModal({ isOpen, onClose, onLogout, currentUser }:
     }
   }
 
+  const openOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsOrderDetailsOpen(true);
+  };
+
   return (
     <div className={`fixed inset-0 z-[70] flex justify-center items-end sm:items-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
       <div className={`bg-dark w-full sm:w-[500px] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] transform transition-transform duration-300 ${isOpen ? 'translate-y-0' : 'translate-y-full sm:translate-y-10'}`}>
@@ -175,13 +185,23 @@ export default function ProfileModal({ isOpen, onClose, onLogout, currentUser }:
                 ) : (
                   <div className="space-y-3">
                     {orders.map((order) => (
-                      <div key={order.id} className="bg-card/50 border border-white/5 rounded-2xl p-4 space-y-2">
+                      <div 
+                        key={order.id} 
+                        onClick={() => openOrderDetails(order)}
+                        className="bg-card/50 border border-white/5 rounded-2xl p-4 space-y-2 group hover:border-brand/20 transition-all cursor-pointer active:scale-[0.98]"
+                      >
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] font-black uppercase text-muted tracking-widest">{new Date(order.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'ru-RU')}</span>
                           <span className={`text-[10px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-full ${getStatusStyle(order.status)}`}>{getStatusText(order.status)}</span>
                         </div>
                         <div className="text-[12px] font-bold text-white/80">{order.total_sum}₪ • {order.order_type}</div>
                         <div className="text-[9px] text-muted font-medium line-clamp-2 italic opacity-60">{(order.items_json?.order_items || '').split('\n')[0]}...</div>
+                        <div className="text-[8px] text-brand/50 font-black uppercase tracking-widest pt-1 flex items-center gap-1 group-hover:text-brand transition-colors">
+                          {lang === 'en' ? 'View details' : 'Подробнее'}
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2 h-2">
+                             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -197,6 +217,12 @@ export default function ProfileModal({ isOpen, onClose, onLogout, currentUser }:
           </button>
         </div>
       </div>
+
+      <OrderDetailsModal
+        isOpen={isOrderDetailsOpen}
+        onClose={() => setIsOrderDetailsOpen(false)}
+        order={selectedOrder}
+      />
     </div>
   );
 }

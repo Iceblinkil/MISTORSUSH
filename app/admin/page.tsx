@@ -34,7 +34,7 @@ interface SupabaseProduct {
   image_url?: string;
 }
 
-type ActiveTab = 'orders' | 'products' | 'archive';
+type ActiveTab = 'dashboard' | 'orders' | 'products' | 'archive';
 
 const STATUS_OPTIONS = ['new', 'Готовится', 'Курьер в пути', 'Завершен'];
 
@@ -56,7 +56,7 @@ export default function AdminPage() {
   const [authLoading, setAuthLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('orders');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [archive, setArchive] = useState<Order[]>([]);
   const [products, setProducts] = useState<SupabaseProduct[]>([]);
@@ -66,6 +66,16 @@ export default function AdminPage() {
   const [selectedProduct, setSelectedProduct] = useState<SupabaseProduct | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+
+  // Site status state
+  const [isSiteActive, setIsSiteActive] = useState(true);
+  const [siteStatusId, setSiteStatusId] = useState<number | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  // Search & Filtering state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [archiveFilter, setArchiveFilter] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all');
+  const [adminProductCat, setAdminProductCat] = useState<string>('');
 
   const ADMIN_EMAILS = ['mistorsush@gmail.com', 'vladislav.chistov1337@gmail.com', 'admin@mistorsush.com'];
 
@@ -81,6 +91,7 @@ export default function AdminPage() {
     if (isAuthorized) {
       loadOrders();
       loadProducts();
+      loadSiteStatus();
     }
   }, [isAuthorized]);
 
@@ -108,7 +119,7 @@ export default function AdminPage() {
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    const { data } = await sb.from('orders').select('*').neq('status', 'Завершен').order('created_at', { ascending: false });
+    const { data } = await sb.from('orders').select('*').neq('status', 'Завершен').order('id', { ascending: true });
     setOrders(data || []);
     setLoading(false);
   }, []);
@@ -121,7 +132,7 @@ export default function AdminPage() {
   }, []);
 
   const loadProducts = useCallback(async () => {
-    const { data } = await sb.from('products').select('*').order('id');
+    const { data } = await sb.from('products').select('*').neq('category', 'system_config').order('id', { ascending: true });
     setProducts(data || []);
   }, []);
 
@@ -146,6 +157,89 @@ export default function AdminPage() {
     setArchive(prev => prev.filter(o => o.id !== orderId));
     if (selectedOrder?.id === orderId) setSelectedOrder(null);
   }
+
+  async function loadSiteStatus() {
+    const { data } = await sb.from('products').select('*').eq('name', 'system_site_status');
+    if (data && data.length > 0) {
+      setIsSiteActive(data[0].is_available);
+      setSiteStatusId(data[0].id);
+    } else {
+      // Create if doesn't exist
+      const newStatus = {
+        name: 'system_site_status',
+        category: 'system_config',
+        price: 0,
+        is_available: true,
+        ingredients: 'Флаг работы сайта (true - включен, false - выключен)',
+        item_id: 'SYS_STATUS'
+      };
+      const { data: newData } = await sb.from('products').insert([newStatus]).select().single();
+      if (newData) {
+        setIsSiteActive(true);
+        setSiteStatusId(newData.id);
+      }
+    }
+  }
+
+  async function toggleSiteStatus() {
+    if (siteStatusId === null) return;
+    setStatusLoading(true);
+    const newVal = !isSiteActive;
+    const { error } = await sb.from('products').update({ is_available: newVal }).eq('id', siteStatusId);
+    if (!error) {
+      setIsSiteActive(newVal);
+    }
+    setStatusLoading(false);
+  }
+
+  // Filtering Logic
+  const filteredOrders = orders.filter(order => {
+    const query = searchQuery.toLowerCase();
+    return (
+      order.id.toString().includes(query) ||
+      order.customer_name.toLowerCase().includes(query) ||
+      order.customer_phone.includes(query) ||
+      (order.customer_email && order.customer_email.toLowerCase().includes(query))
+    );
+  });
+
+  const filteredArchive = archive.filter(order => {
+    // Search query filter
+    const query = searchQuery.toLowerCase();
+    const matchesQuery = (
+      order.id.toString().includes(query) ||
+      order.customer_name.toLowerCase().includes(query) ||
+      order.customer_phone.includes(query) ||
+      (order.customer_email && order.customer_email.toLowerCase().includes(query))
+    );
+
+    if (!matchesQuery) return false;
+
+    // Period filter
+    if (archiveFilter === 'all') return true;
+    
+    const orderDate = new Date(order.created_at);
+    const now = new Date();
+    
+    switch (archiveFilter) {
+      case 'today':
+        return orderDate.toDateString() === now.toDateString();
+      case 'week':
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return orderDate >= weekAgo;
+      case 'month':
+        const monthAgo = new Date();
+        monthAgo.setMonth(now.getMonth() - 1);
+        return orderDate >= monthAgo;
+      case 'year':
+        const yearAgo = new Date();
+        yearAgo.setFullYear(now.getFullYear() - 1);
+        return orderDate >= yearAgo;
+      default:
+        return true;
+    }
+  });
 
   async function toggleProductAvailability(product: SupabaseProduct) {
     const newVal = !product.is_available;
@@ -181,7 +275,7 @@ export default function AdminPage() {
       ingredients: '',
       ingredients_en: '',
       is_available: true,
-      category: menuData[0]?.category || '',
+      category: menuData[0]?.slug || '',
     });
   }
 
@@ -231,16 +325,21 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-dark">
       {/* Top bar */}
-      <div className="bg-card border-b border-white/10 px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center text-xl border border-brand/20">🍣</div>
+      <div className="bg-card border-b border-white/10 px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-xl">
+        <div 
+          onClick={() => setActiveTab('dashboard')}
+          className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-all"
+        >
+          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center text-xl border border-brand/20 group-hover:rotate-12 transition-transform">🍣</div>
           <div>
-            <h1 className="text-sm font-black uppercase tracking-widest text-white">Admin Panel</h1>
-            <p className="text-[10px] text-muted font-bold">{currentUser?.email}</p>
+            <h1 className="text-sm font-black uppercase tracking-[0.2em] text-white flex flex-col leading-tight">
+              MISTOR<span className="text-brand">SUSH</span>
+            </h1>
+            <div className="w-4 h-0.5 bg-brand rounded-full transition-all group-hover:w-full"></div>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={loadOrders} className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-white transition-colors border border-white/10 px-3 py-2 rounded-xl hover:bg-white/5">
+          <button onClick={loadOrders} className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-white transition-colors border border-white/10 px-3 py-2 rounded-xl hover:bg-white/5 md:flex hidden">
             🔄 Обновить
           </button>
           <button onClick={() => sb.auth.signOut().then(() => setIsAuthorized(false))}
@@ -250,240 +349,447 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 px-4 sm:px-8 pt-6 pb-0">
-        {(['orders', 'products', 'archive'] as ActiveTab[]).map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2.5 rounded-t-xl text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${
-              activeTab === tab
-                ? 'text-brand border-brand bg-brand/5'
-                : 'text-muted border-transparent hover:text-white hover:bg-white/5'
+      <div className="max-w-5xl mx-auto py-8 transition-all duration-500">
+        {/* DASHBOARD VIEW */}
+        {activeTab === 'dashboard' && (
+          <div className="px-4 sm:px-0 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Site Status Section */}
+            <div className={`relative overflow-hidden p-8 rounded-[2.5rem] border transition-all duration-700 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-8 group ${
+              isSiteActive ? 'bg-card border-white/5' : 'bg-brand/5 border-brand/20'
             }`}>
-            {tab === 'orders' ? `📋 Заказы (${orders.length})` : tab === 'products' ? '🍱 Продукты' : '🗂️ Архив'}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-4 sm:px-8 py-6">
-        {/* ORDERS TAB */}
-        {activeTab === 'orders' && (
-          <div className="flex gap-6 min-h-[60vh]">
-            {/* Orders list */}
-            <div className="flex-1 space-y-3 overflow-y-auto max-h-[75vh] custom-scrollbar pr-2">
-              {loading && <p className="text-center text-muted py-8 animate-pulse">Загрузка...</p>}
-              {!loading && orders.length === 0 && (
-                <div className="text-center py-16 text-muted">
-                  <div className="text-5xl mb-4 opacity-30">📭</div>
-                  <p className="font-black uppercase text-[10px] tracking-widest opacity-50">Новых заказов нет</p>
+              <div className={`absolute -right-16 -top-16 w-64 h-64 blur-[100px] rounded-full transition-all duration-700 ${
+                isSiteActive ? 'bg-emerald-500/10' : 'bg-brand/10'
+              }`} />
+              
+              <div className="flex items-center gap-6 relative z-10 w-full sm:w-auto">
+                <div className={`w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-3xl shadow-inner transition-all duration-700 ${
+                  isSiteActive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-brand/10 text-brand'
+                }`}>
+                  {isSiteActive ? '✅' : '🛑'}
                 </div>
-              )}
-              {orders.map(order => (
-                <div key={order.id} onClick={() => setSelectedOrder(order)}
-                  className={`bg-card border rounded-2xl p-4 cursor-pointer transition-all hover:border-brand/30 active:scale-[0.98] ${selectedOrder?.id === order.id ? 'border-brand/40 bg-brand/5' : 'border-white/5'}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted">#{order.id} • {formatDate(order.created_at)}</span>
-                    <span className={`text-[9px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-full ${getStatusStyle(order.status)}`}>{order.status}</span>
-                  </div>
-                  <div className="font-bold text-white text-sm">{order.customer_name}</div>
-                  <div className="text-muted text-xs mt-0.5">{order.customer_phone}</div>
-                  <div className="flex gap-3 mt-2 text-[10px] font-black uppercase tracking-widest">
-                    <span className={order.order_type === 'Доставка' ? 'text-blue-400' : 'text-emerald-400'}>{order.order_type}</span>
-                    <span className="text-brand">{order.total_sum}₪</span>
-                  </div>
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+                    {isSiteActive ? 'Сайт работает' : 'Сайт отключен'}
+                  </h3>
+                  <p className="text-muted text-sm mt-1 font-medium leading-relaxed opacity-60">
+                    {isSiteActive ? 'Принимает заказы в штатном режиме' : 'Заказы временно не принимаются'}
+                  </p>
                 </div>
-              ))}
+              </div>
+              
+              <button 
+                onClick={toggleSiteStatus}
+                disabled={statusLoading}
+                className={`relative w-24 h-12 rounded-full transition-all duration-700 outline-none focus:ring-4 focus:ring-white/10 shrink-0 shadow-2xl active:scale-95 ${
+                  isSiteActive ? 'bg-emerald-500' : 'bg-brand'
+                }`}
+              >
+                <div className={`absolute left-1.5 top-1.5 w-9 h-9 rounded-full bg-white shadow-xl transform transition-transform duration-500 flex items-center justify-center ${
+                  isSiteActive ? 'translate-x-12' : 'translate-x-0'
+                }`}>
+                  {statusLoading && (
+                    <div className={`w-5 h-5 border-2 border-t-transparent rounded-full animate-spin ${isSiteActive ? 'border-emerald-500' : 'border-brand'}`} />
+                  )}
+                </div>
+              </button>
             </div>
 
-            {/* Order detail panel */}
-            <div className="hidden lg:flex flex-col w-[420px] shrink-0">
-              {selectedOrder ? (
-                <div className="bg-card border border-white/10 rounded-2xl p-6 space-y-5 sticky top-24 overflow-y-auto max-h-[75vh] custom-scrollbar">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-black uppercase tracking-widest text-sm">Заказ #{selectedOrder.id}</h3>
-                    <button onClick={() => deleteOrder(selectedOrder.id)} className="text-[9px] text-brand/70 hover:text-brand font-black uppercase tracking-widest border border-brand/20 px-2 py-1 rounded-lg hover:bg-brand/5 transition-colors">✕ Удалить</button>
-                  </div>
-                  <div className="text-[10px] text-muted font-bold uppercase tracking-widest">{formatDate(selectedOrder.created_at)}</div>
+            <div className="text-center space-y-4 py-4">
+              <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic drop-shadow-2xl">
+                Панель <span className="text-brand">Управления</span>
+              </h2>
+              <p className="text-muted text-xs md:text-sm uppercase tracking-[0.4em] font-black opacity-30">Выберите раздел для работы</p>
+            </div>
 
-                  <div className="space-y-1">
-                    <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Клиент</div>
-                    <div className="text-white font-bold">{selectedOrder.customer_name}</div>
-                    <div className="text-muted text-sm">{selectedOrder.customer_phone}</div>
-                    {selectedOrder.customer_email && <div className="text-muted text-xs">{selectedOrder.customer_email}</div>}
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Доставка</div>
-                    <div className="text-white text-sm font-bold">{selectedOrder.order_type}</div>
-                    {selectedOrder.delivery_address !== 'Самовывоз' && <div className="text-muted text-xs">{selectedOrder.delivery_address}</div>}
-                    <div className="text-muted text-xs">⏰ {selectedOrder.delivery_time || 'ASAP'}</div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Состав заказа</div>
-                    <pre className="text-white text-xs whitespace-pre-wrap bg-dark/50 rounded-xl p-3 border border-white/5 font-mono leading-relaxed">
-                      {selectedOrder.items_json?.order_items || ''}
-                    </pre>
-                  </div>
-
-                  {selectedOrder.comment && (
-                    <div className="space-y-1">
-                      <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Комментарий</div>
-                      <div className="text-muted text-sm italic bg-dark/50 rounded-xl p-3 border border-white/5">{selectedOrder.comment}</div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-muted">Итого:</span>
-                    <span className="text-brand font-black text-xl">{selectedOrder.total_sum}₪</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Статус заказа</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {STATUS_OPTIONS.map(status => (
-                        <button key={status} onClick={() => updateOrderStatus(selectedOrder.id, status)}
-                          className={`py-2 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all active:scale-95 ${
-                            selectedOrder.status === status
-                              ? getStatusStyle(status) + ' ring-1 ring-brand/30'
-                              : 'border-white/10 text-muted hover:bg-white/5'
-                          }`}>
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <button onClick={() => setActiveTab('orders')}
+                className="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-8 active:scale-[0.98]">
+                <div className="absolute -right-16 -top-16 w-48 h-48 bg-brand/10 blur-[80px] rounded-full group-hover:bg-brand/20 transition-all" />
+                <div className="w-16 h-16 bg-brand/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500 border border-brand/10">📋</div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Заказы</h3>
+                  <p className="text-muted text-sm mt-3 font-medium leading-relaxed opacity-60">Просмотр новых заявок, адресов доставки и состава заказов.</p>
                 </div>
-              ) : (
-                <div className="flex items-center justify-center h-64 text-muted opacity-40">
-                  <div className="text-center">
-                    <div className="text-5xl mb-3">👈</div>
-                    <p className="text-[10px] uppercase font-black tracking-widest">Выберите заказ</p>
-                  </div>
+              </button>
+
+              <button onClick={() => setActiveTab('products')}
+                className="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-8 active:scale-[0.98]">
+                <div className="absolute -right-16 -top-16 w-48 h-48 bg-white/5 blur-[80px] rounded-full group-hover:bg-white/10 transition-all" />
+                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500 border border-white/5">🍱</div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight group-hover:text-brand transition-colors">Меню</h3>
+                  <p className="text-muted text-sm mt-3 font-medium leading-relaxed opacity-60">Управление ассортиментом: редактирование цен, названий и категорий.</p>
                 </div>
-              )}
+              </button>
+
+              <button onClick={() => setActiveTab('archive')}
+                className="group relative bg-card border border-white/5 p-10 rounded-[2.5rem] shadow-2xl hover:border-brand/40 transition-all duration-500 overflow-hidden text-left flex flex-col gap-8 active:scale-[0.98] md:col-span-2">
+                <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-all" />
+                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform duration-500 border border-emerald-500/10">✅</div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight group-hover:text-emerald-500 transition-colors">Архив</h3>
+                  <p className="text-muted text-sm mt-3 font-medium leading-relaxed opacity-60">История всех завершенных заказов. Просмотр выполненных доставок и чеков.</p>
+                </div>
+              </button>
             </div>
           </div>
         )}
 
-        {/* PRODUCTS TAB */}
-        {activeTab === 'products' && (
-          <div className="max-w-5xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="font-black uppercase tracking-widest text-sm">Управление продуктами ({products.length})</h2>
-              <button onClick={createNewProduct} className="bg-brand text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl active:scale-95 transition-all shadow-lg shadow-brand/20">
-                + Добавить
+        {/* SUB-VIEW CONTENT */}
+        {activeTab !== 'dashboard' && (
+          <div className="animate-in fade-in duration-500 px-4 sm:px-0">
+            <div className="mb-6 flex items-center justify-between">
+              <button 
+                onClick={() => setActiveTab('dashboard')}
+                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-brand transition-colors group"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 group-hover:-translate-x-1 transition-transform">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                </svg>
+                Назад к панели
               </button>
+              
+              <div className="flex gap-1">
+                {(['orders', 'products', 'archive'] as ActiveTab[]).map(tab => (
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                      activeTab === tab ? 'bg-brand text-white border-brand shadow-lg shadow-brand/20' : 'bg-transparent text-muted border-transparent hover:bg-white/5'
+                    }`}>
+                    {tab === 'orders' ? 'Новые' : tab === 'products' ? 'Товары' : 'Архив'}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map(product => (
-                <div key={product.id} className="bg-card border border-white/5 rounded-2xl p-4 space-y-3 hover:border-brand/20 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold text-sm text-white">{product.name}</div>
-                      <div className="text-[10px] text-muted uppercase font-bold tracking-widest mt-0.5">{product.category}</div>
-                    </div>
-                    <span className="font-black text-brand">{product.price}₪</span>
+            {/* Mini Site Status Banner */}
+            <div className="mb-8">
+              <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
+                isSiteActive ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 'bg-brand/5 border-brand/20 text-brand'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+                    isSiteActive ? 'bg-emerald-500/20' : 'bg-brand/20'
+                  }`}>
+                    {isSiteActive ? '✅' : '🛑'}
                   </div>
-                  <div className="text-xs text-muted line-clamp-2 opacity-70">{product.ingredients}</div>
-                  <div className="flex gap-2">
-                    <button onClick={() => toggleProductAvailability(product)}
-                      className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-                        product.is_available ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-brand/10 border-brand/30 text-brand'
-                      }`}>
-                      {product.is_available ? '✓ Доступен' : '✕ Нет в наличии'}
-                    </button>
-                    <button onClick={() => { setSelectedProduct(product); setIsNewProduct(false); }}
-                      className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10 text-muted hover:text-white hover:bg-white/5 transition-all">
-                      Ред.
-                    </button>
-                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest text-white/90">
+                    {isSiteActive ? 'Сайт работает' : 'Сайт отключен'}
+                  </span>
                 </div>
-              ))}
+                <button onClick={toggleSiteStatus} disabled={statusLoading} className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${
+                  isSiteActive ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-brand text-white border-brand'
+                }`}>
+                  {statusLoading ? '...' : 'Переключить'}
+                </button>
+              </div>
             </div>
 
-            {/* Edit product panel */}
-            {selectedProduct && (
-              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-dark border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
-                  <div className="flex justify-between items-center p-5 border-b border-white/10">
-                    <h3 className="font-black uppercase tracking-widest text-sm">{isNewProduct ? 'Новый продукт' : 'Редактировать'}</h3>
-                    <button onClick={() => setSelectedProduct(null)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                    </button>
-                  </div>
-                  <div className="p-5 space-y-4">
-                    {[
-                      { label: 'ID позиции', key: 'item_id', type: 'text' },
-                      { label: 'Название (RU)', key: 'name', type: 'text' },
-                      { label: 'Name (EN)', key: 'name_en', type: 'text' },
-                      { label: 'Цена (₪)', key: 'price', type: 'number' },
-                      { label: 'Состав (RU)', key: 'ingredients', type: 'text' },
-                      { label: 'Ingredients (EN)', key: 'ingredients_en', type: 'text' },
-                      { label: 'Категория', key: 'category', type: 'text' },
-                      { label: 'URL картинки', key: 'image_url', type: 'text' },
-                    ].map(({ label, key, type }) => (
-                      <div key={key} className="space-y-1">
-                        <label className="text-[9px] uppercase font-black tracking-widest text-muted ml-1">{label}</label>
-                        <input
-                          type={type}
-                          value={String((selectedProduct as unknown as Record<string, unknown>)[key] ?? '')}
-                          onChange={e => setSelectedProduct(prev => prev ? { ...prev, [key]: type === 'number' ? Number(e.target.value) : e.target.value } : null)}
-                          className="w-full bg-card border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-brand transition text-sm"
-                        />
+            {/* ORDERS TAB */}
+            {activeTab === 'orders' && (
+              <div className="space-y-6">
+                <div className="relative w-full max-w-sm mb-6">
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Поиск заказов..." 
+                    className="w-full bg-card border border-white/10 rounded-xl px-10 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-brand/40 transition-all shadow-inner" />
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  </svg>
+                </div>
+
+                <div className="flex gap-6 min-h-[60vh] w-full">
+                  <div className="flex-1 space-y-3 overflow-y-auto max-h-[75vh] custom-scrollbar pr-2">
+                    {loading && <p className="text-center text-muted py-8 animate-pulse">Загрузка...</p>}
+                    {!loading && filteredOrders.length === 0 && (
+                      <div className="text-center py-16 text-muted">
+                        <div className="text-5xl mb-4 opacity-30">📭</div>
+                        <p className="font-black uppercase text-[10px] tracking-widest opacity-50">Новых заказов нет</p>
+                      </div>
+                    )}
+                    {filteredOrders.map(order => (
+                      <div key={order.id} onClick={() => setSelectedOrder(order)}
+                        className={`bg-card border rounded-2xl p-4 cursor-pointer transition-all hover:border-brand/30 active:scale-[0.98] ${selectedOrder?.id === order.id ? 'border-brand/40 bg-brand/5' : 'border-white/5'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted">#{order.id} • {formatDate(order.created_at)}</span>
+                          <span className={`text-[9px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-full ${getStatusStyle(order.status)}`}>{order.status}</span>
+                        </div>
+                        <div className="font-bold text-white text-sm">{order.customer_name}</div>
+                        <div className="text-muted text-xs mt-0.5">{order.customer_phone}</div>
+                        <div className="flex gap-3 mt-2 text-[10px] font-black uppercase tracking-widest">
+                          <span className={order.order_type === 'Доставка' ? 'text-blue-400' : 'text-emerald-400'}>{order.order_type}</span>
+                          <span className="text-brand">{order.total_sum}₪</span>
+                        </div>
                       </div>
                     ))}
-                    <div className="flex items-center gap-3 py-2">
-                      <button onClick={() => setSelectedProduct(prev => prev ? { ...prev, is_available: !prev.is_available } : null)}
-                        className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
-                          selectedProduct.is_available ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-brand/10 border-brand/30 text-brand'
-                        }`}>
-                        {selectedProduct.is_available ? '✓ Доступен' : '✕ Недоступен'}
-                      </button>
-                    </div>
-                    {saveMessage && <p className="text-center text-brand text-xs font-bold">{saveMessage}</p>}
-                    <button onClick={saveProduct} className="w-full bg-brand text-white font-black py-3 rounded-xl active:scale-[0.98] transition shadow-lg shadow-brand/20 uppercase text-xs tracking-widest">
-                      Сохранить
-                    </button>
+                  </div>
+
+                  <div className="hidden lg:flex flex-col w-[420px] shrink-0">
+                    {selectedOrder ? (
+                      <div className="bg-card border border-white/10 rounded-2xl p-6 space-y-5 sticky top-24 overflow-y-auto max-h-[75vh] custom-scrollbar">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-black uppercase tracking-widest text-sm">Заказ #{selectedOrder.id}</h3>
+                        </div>
+                        <div className="text-[10px] text-muted font-bold uppercase tracking-widest">{formatDate(selectedOrder.created_at)}</div>
+                        <div className="space-y-1">
+                          <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Клиент</div>
+                          <div className="text-white font-bold">{selectedOrder.customer_name}</div>
+                          <div className="text-muted text-sm">{selectedOrder.customer_phone}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Состав</div>
+                          <pre className="text-white text-xs whitespace-pre-wrap bg-dark/50 rounded-xl p-3 border border-white/5 font-mono leading-relaxed">
+                            {selectedOrder.items_json?.order_items || ''}
+                          </pre>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                          <span className="text-[10px] uppercase font-black tracking-widest text-muted">Итого:</span>
+                          <span className="text-brand font-black text-xl">{selectedOrder.total_sum}₪</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-[9px] uppercase font-black tracking-widest text-brand/70">Статус</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {STATUS_OPTIONS.map(status => (
+                              <button key={status} onClick={() => updateOrderStatus(selectedOrder.id, status)}
+                                className={`py-2 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                                  selectedOrder.status === status ? getStatusStyle(status) : 'border-white/10 text-muted'
+                                }`}>
+                                {status}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-64 text-muted opacity-40">
+                         <p className="text-[10px] uppercase font-black tracking-widest">Выберите заказ</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* ARCHIVE TAB */}
-        {activeTab === 'archive' && (
-          <div className="max-w-4xl">
-            <h2 className="font-black uppercase tracking-widest text-sm mb-6">Архив завершённых заказов ({archive.length})</h2>
-            {loading ? (
-              <p className="text-center text-muted py-8 animate-pulse">Загрузка...</p>
-            ) : (
-              <div className="space-y-3">
-                {archive.map(order => (
-                  <div key={order.id} className="bg-card border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-emerald-500/20 transition-colors">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex gap-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted">#{order.id}</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted">{formatDate(order.created_at)}</span>
-                      </div>
-                      <div className="font-bold text-white text-sm">{order.customer_name} • {order.customer_phone}</div>
-                      <div className="text-xs text-muted line-clamp-1 opacity-70">{(order.items_json?.order_items || '').split('\n')[0]}...</div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="font-black text-emerald-400 text-lg">{order.total_sum}₪</span>
-                      <button onClick={() => deleteOrder(order.id)} className="text-[9px] text-brand/60 hover:text-brand font-black uppercase tracking-widest border border-brand/20 px-2 py-1.5 rounded-lg hover:bg-brand/5 transition-colors">
-                        Удалить
+            {/* PRODUCTS TAB */}
+            {activeTab === 'products' && (() => {
+              // Map slug → human-readable name (from menuData)
+              const slugToName: Record<string, string> = Object.fromEntries(menuData.map(c => [c.slug, c.category]));
+              const slugToEmoji: Record<string, string> = {
+                'classic_rolls': '🍣', 'baked_rolls': '🔥', 'unusual_rolls': '✨',
+                'burgers': '🍔', 'gunkan': '🥢', 'drinks': '🥤',
+              };
+              const slugToColor: Record<string, string> = {
+                'classic_rolls': 'bg-[#1a1f2e] text-blue-300 border-blue-500/20',
+                'baked_rolls': 'bg-[#1e1c14] text-amber-400 border-amber-500/20',
+                'unusual_rolls': 'bg-[#1c1a10] text-yellow-400 border-yellow-500/20',
+                'burgers': 'bg-[#1c1814] text-orange-400 border-orange-500/20',
+                'gunkan': 'bg-[#141a1e] text-sky-400 border-sky-500/20',
+                'drinks': 'bg-[#1a1a2a] text-purple-400 border-purple-500/20',
+              };
+              const displayName = (slug: string) => slugToName[slug] || slug;
+              const displayEmoji = (slug: string) => slugToEmoji[slug] || '🍱';
+              const displayColor = (slug: string) => slugToColor[slug] || 'bg-card text-muted border-white/10';
+
+              // Derive unique category slugs from actual Supabase products (order preserved)
+              const uniqueSlugs = Array.from(
+                products.reduce((map, p) => {
+                  if (!map.has(p.category)) map.set(p.category, true);
+                  return map;
+                }, new Map<string, boolean>()).keys()
+              );
+
+              // EditState: track which product is being edited inline
+              const editingId = selectedProduct?.id;
+
+              return (
+                <div className="space-y-5">
+                  {/* Category scroll tabs */}
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueSlugs.map(slug => (
+                      <button key={slug}
+                        onClick={() => {
+                          const el = document.getElementById('admin-cat-' + slug);
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="px-4 py-2 rounded-2xl text-[11px] font-black tracking-widest border transition-all flex items-center gap-1.5 bg-transparent text-muted border-white/10 hover:bg-white/5 hover:text-white hover:border-brand/30">
+                        <span>{displayEmoji(slug)}</span>
+                        <span className="uppercase">{displayName(slug)}</span>
                       </button>
+                    ))}
+                  </div>
+
+                  {/* Big add button */}
+                  <button onClick={createNewProduct}
+                    className="w-full py-5 bg-brand text-white font-black uppercase tracking-[0.25em] text-sm rounded-2xl flex items-center justify-center gap-3 shadow-2xl shadow-brand/30 active:scale-[0.98] transition-all hover:bg-brand/90">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Добавить новый товар
+                  </button>
+
+                  {/* All categories — grouped from actual Supabase data */}
+                  {products.length === 0 && (
+                    <div className="text-center py-16 text-muted opacity-40">
+                      <p className="text-[11px] uppercase font-black tracking-widest">Загрузка товаров...</p>
                     </div>
-                  </div>
-                ))}
-                {archive.length === 0 && (
-                  <div className="text-center py-16 text-muted opacity-40">
-                    <div className="text-5xl mb-4">🗂️</div>
-                    <p className="font-black uppercase text-[10px] tracking-widest">Архив пуст</p>
-                  </div>
-                )}
+                  )}
+                  {uniqueSlugs.map(slug => {
+                    const catProducts = products.filter(p => p.category === slug);
+                    if (catProducts.length === 0) return null;
+                    const catColor = displayColor(slug);
+                    return (
+                      <div key={slug} id={'admin-cat-' + slug} className="space-y-3">
+                        {/* Section title */}
+                        <div className="flex items-center gap-3 pt-4">
+                          <div className="flex-1 h-px bg-white/10" />
+                          <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2 text-white/80">
+                            <span>{displayEmoji(slug)}</span>
+                            {displayName(slug)}
+                          </h2>
+                          <div className="flex-1 h-px bg-white/10" />
+                        </div>
+
+                        {catProducts.map(product => {
+                          const isEditing = editingId === product.id && !isNewProduct;
+
+                          return (
+                            <div key={product.id} className="bg-card border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all">
+                              {/* Top row: name + price + buttons */}
+                              <div className="p-4 flex items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-bold text-white text-[16px] leading-tight">{product.name}</div>
+                                  <div className={`text-[10px] font-black uppercase tracking-widest mt-1 flex items-center gap-1.5 ${product.is_available ? 'text-emerald-400' : 'text-brand'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${product.is_available ? 'bg-emerald-400' : 'bg-brand'}`} />
+                                    {product.is_available ? 'Активен' : 'Скрыт'}
+                                  </div>
+                                </div>
+
+                                {/* Inline price input */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <input type="number"
+                                    value={isEditing ? (selectedProduct?.price ?? product.price) : product.price}
+                                    onChange={e => {
+                                      if (!isEditing) { setSelectedProduct(product); setIsNewProduct(false); }
+                                      setSelectedProduct(prev => prev ? { ...prev, price: Number(e.target.value) } : null);
+                                    }}
+                                    onFocus={() => { if (!isEditing) { setSelectedProduct(product); setIsNewProduct(false); } }}
+                                    className="w-14 text-center font-black text-brand text-base bg-transparent outline-none border-b border-brand/30 focus:border-brand transition-all"
+                                  />
+                                  <span className="text-white/30 text-base font-bold">=</span>
+                                </div>
+
+                                {/* ✓ Red save button */}
+                                <button
+                                  onClick={async () => {
+                                    if (isEditing) { await saveProduct(); }
+                                    else { setSelectedProduct(product); setIsNewProduct(false); }
+                                  }}
+                                  className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shadow-lg shadow-brand/20 active:scale-90 transition-all hover:bg-brand/80 shrink-0">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                  </svg>
+                                </button>
+
+                                {/* ✗ Orange toggle button */}
+                                <button
+                                  onClick={() => toggleProductAvailability(product)}
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all shrink-0 ${
+                                    product.is_available
+                                      ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20'
+                                      : 'bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20'
+                                  }`}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              {/* Always-visible: category badge */}
+                              <div className="px-4 pb-3 flex items-center gap-2">
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${catColor} flex items-center gap-1.5`}>
+                                  <span>{displayEmoji(product.category)}</span>
+                                  {isEditing ? (
+                                    /* Category select: value = slug (what DB stores), label = Russian name */
+                                    <select value={selectedProduct?.category || product.category}
+                                      onChange={e => setSelectedProduct({ ...selectedProduct!, category: e.target.value })}
+                                      className="bg-transparent border-none outline-none text-inherit font-black uppercase tracking-widest cursor-pointer max-w-[160px]">
+                                      {menuData.map(m => (
+                                        <option key={m.slug} value={m.slug}>{m.category}</option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <span>{displayName(product.category)}</span>
+                                  )}
+                                </span>
+                                {/* Chevron to indicate expandable (visual only) */}
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 text-white/20 ml-auto">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                              </div>
+
+                              {/* Always-visible: image URL row + NO button */}
+                              <div className="px-4 pb-4 flex items-center gap-2 border-t border-white/5 pt-3">
+                                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-muted shrink-0">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                  </svg>
+                                </div>
+                                <input type="text"
+                                  value={isEditing ? (selectedProduct?.image_url || '') : (product.image_url || '')}
+                                  onChange={e => { if (!isEditing) { setSelectedProduct(product); setIsNewProduct(false); } setSelectedProduct(prev => prev ? { ...prev, image_url: e.target.value } : null); }}
+                                  onFocus={() => { if (!isEditing) { setSelectedProduct(product); setIsNewProduct(false); } }}
+                                  placeholder="URL изображения..."
+                                  className="flex-1 bg-transparent text-sm text-white/40 outline-none placeholder-white/20 focus:text-white/70 transition-all"
+                                />
+                                {/* Upload icon */}
+                                <button className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-muted hover:bg-white/10 transition-all flex-shrink-0">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                  </svg>
+                                </button>
+                                {/* NO button */}
+                                <button
+                                  onClick={() => { if (isEditing) setSelectedProduct({ ...selectedProduct!, image_url: undefined }); }}
+                                  className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted hover:bg-white/10 transition-all flex-shrink-0">
+                                  NO
+                                </button>
+                                {isEditing && saveMessage && <span className="text-brand text-[10px] font-black uppercase animate-pulse">{saveMessage}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+
+
+            {/* ARCHIVE TAB */}
+            {activeTab === 'archive' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                   <h2 className="font-black uppercase tracking-widest text-sm">Архив ({filteredArchive.length})</h2>
+                   <div className="flex gap-2">
+                    {(['today', 'week', 'month', 'all'] as const).map(p => (
+                      <button key={p} onClick={() => setArchiveFilter(p)} className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                        archiveFilter === p ? 'bg-white/10 text-white' : 'text-muted'
+                      }`}>
+                        {p}
+                      </button>
+                    ))}
+                   </div>
+                </div>
+                <div className="space-y-3">
+                  {filteredArchive.map(order => (
+                    <div key={order.id} className="bg-card border border-white/5 rounded-2xl p-4 flex justify-between items-center">
+                      <div>
+                        <div className="text-[10px] font-black text-muted uppercase">#{order.id} • {formatDate(order.created_at)}</div>
+                        <div className="font-bold text-white">{order.customer_name}</div>
+                      </div>
+                      <div className="font-black text-emerald-400">{order.total_sum}₪</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

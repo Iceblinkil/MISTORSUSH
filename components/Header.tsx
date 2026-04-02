@@ -40,7 +40,7 @@ export default function Header({ onOpenDrawer, onOpenCart, onOpenAuth, isLoggedI
         <div className="flex items-center gap-2 relative z-10 shrink-0">
           {/* Lang */}
           <button onClick={toggleLang} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black tracking-wider text-white active:scale-95 transition shadow-lg border border-white/5">
-            {lang === 'ru' ? 'RU' : 'EN'}
+            {lang.toUpperCase()}
           </button>
           {/* Instagram */}
           <a href="https://instagram.com/mvladislavmistorsushi" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white active:scale-95 transition shadow-lg shadow-pink-500/20">

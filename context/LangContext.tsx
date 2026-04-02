@@ -11,16 +11,25 @@ interface LangContextValue {
 
 const LangContext = createContext<LangContextValue | null>(null);
 
+const LANGS: Lang[] = ['ru', 'en', 'he'];
+
 export function LangProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>('ru');
 
   useEffect(() => {
     const stored = localStorage.getItem('lang') as Lang | null;
-    if (stored && (stored === 'ru' || stored === 'en')) setLang(stored);
+    if (stored && LANGS.includes(stored)) setLang(stored);
   }, []);
 
+  // Apply RTL dir & html lang attribute whenever lang changes
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+  }, [lang]);
+
   const toggleLang = () => {
-    const next: Lang = lang === 'ru' ? 'en' : 'ru';
+    const idx = LANGS.indexOf(lang);
+    const next: Lang = LANGS[(idx + 1) % LANGS.length];
     setLang(next);
     localStorage.setItem('lang', next);
   };

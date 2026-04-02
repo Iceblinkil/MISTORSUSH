@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useLang } from '@/context/LangContext';
-import { menuData } from '@/lib/menuData';
+import { menuData, getItemName } from '@/lib/menuData';
 import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -42,6 +42,30 @@ export default function CheckoutModal({ isOpen, onClose, onBack, isPromoActive, 
       dateRef.current.min = today;
     }
   }, [isOpen]);
+
+  // Auto-fill form from user's saved profile
+  useEffect(() => {
+    if (!isOpen || !currentUser || !sb) return;
+    sb.from('profiles')
+      .select('full_name,phone,address,apt,floor,entrance')
+      .eq('id', currentUser.id)
+      .single()
+      .then(({ data }) => {
+        if (!data) return;
+        if (data.full_name && nameRef.current && !nameRef.current.value)
+          nameRef.current.value = data.full_name;
+        if (data.phone && phoneRef.current && !phoneRef.current.value)
+          phoneRef.current.value = data.phone;
+        if (data.address && addressRef.current && !addressRef.current.value)
+          addressRef.current.value = data.address;
+        if (data.apt && aptRef.current && !aptRef.current.value)
+          aptRef.current.value = data.apt;
+        if (data.floor && floorRef.current && !floorRef.current.value)
+          floorRef.current.value = data.floor;
+        if (data.entrance && entranceRef.current && !entranceRef.current.value)
+          entranceRef.current.value = data.entrance;
+      });
+  }, [isOpen, currentUser]);
 
   function calculateDiscount(): number {
     if (!isPromoActive) return 0;
@@ -102,7 +126,7 @@ export default function CheckoutModal({ isOpen, onClose, onBack, isPromoActive, 
 
     const orderItemsText = cartItems
       .map((ci) => {
-        const displayName = lang === 'en' ? ci.item.nameEn : ci.item.name;
+        const displayName = getItemName(ci.item, lang);
         return `${displayName} x${ci.count} (${ci.item.price * ci.count}₪)`;
       })
       .join('\n');

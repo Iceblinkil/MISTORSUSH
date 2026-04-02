@@ -1,19 +1,43 @@
 'use client';
 
 import Image from 'next/image';
-import { MenuItem, menuData } from '@/lib/menuData';
+import { useState, useEffect } from 'react';
+import { MenuItem, getItemName } from '@/lib/menuData';
 import { useCart } from '@/context/CartContext';
 import { useLang } from '@/context/LangContext';
 
 interface UpsellModalProps {
   isOpen: boolean;
   onSkip: () => void;
+  onGoToCart: () => void;
   suggestions: MenuItem[];
 }
 
-export default function UpsellModal({ isOpen, onSkip, suggestions }: UpsellModalProps) {
+export default function UpsellModal({ isOpen, onSkip, onGoToCart, suggestions }: UpsellModalProps) {
   const { addToCart, removeFromCart, getItemCount } = useCart();
   const { lang, t } = useLang();
+
+  // Track if the user added any upsell items in this session
+  const [upsellAdded, setUpsellAdded] = useState(false);
+
+  // Reset state when modal is opened fresh
+  useEffect(() => {
+    if (isOpen) setUpsellAdded(false);
+  }, [isOpen]);
+
+  const handleAdd = (id: string) => {
+    addToCart(id);
+    setUpsellAdded(true);
+  };
+
+  const handleRemove = (id: string, currentCount: number) => {
+    removeFromCart(id);
+    // If removing the last upsell item set added back to false
+    if (currentCount <= 1) {
+      const anyLeft = suggestions.some(s => getItemCount(s.id) > (s.id === id ? 1 : 0));
+      if (!anyLeft) setUpsellAdded(false);
+    }
+  };
 
   return (
     <div
@@ -49,22 +73,22 @@ export default function UpsellModal({ isOpen, onSkip, suggestions }: UpsellModal
                     </div>
                   )}
                   <h3 className={`font-bold text-[13px] leading-tight text-center text-white/95 line-clamp-2 min-h-[30px] w-full mb-1 ${!item.image ? 'mt-4' : ''}`}>
-                    {lang === 'en' ? item.nameEn : item.name}
+                    {getItemName(item, lang)}
                   </h3>
                   <div className="flex items-center justify-between w-full mt-auto pt-2 border-t border-white/5 h-[40px]">
                     <span className="font-bold text-sm text-brand">{item.price}₪</span>
                     {count > 0 ? (
                       <div className="flex items-center bg-dark rounded-full p-0.5 border border-white/10 shadow-inner">
-                        <button type="button" onClick={() => removeFromCart(item.id)} className="w-7 h-7 flex items-center justify-center text-muted hover:text-white active:scale-95 transition">
+                        <button type="button" onClick={() => handleRemove(item.id, count)} className="w-7 h-7 flex items-center justify-center text-muted hover:text-white active:scale-95 transition">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
                         </button>
                         <span className="w-6 text-center text-sm font-bold text-white">{count}</span>
-                        <button type="button" onClick={() => addToCart(item.id)} className="w-7 h-7 flex items-center justify-center text-brand hover:text-white active:scale-95 transition">
+                        <button type="button" onClick={() => handleAdd(item.id)} className="w-7 h-7 flex items-center justify-center text-brand hover:text-white active:scale-95 transition">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         </button>
                       </div>
                     ) : (
-                      <button type="button" onClick={() => addToCart(item.id)} className="w-8 h-8 rounded-full bg-white/5 text-white flex items-center justify-center active:scale-90 transition-all border border-white/10 hover:bg-white/10 shadow-sm">
+                      <button type="button" onClick={() => handleAdd(item.id)} className="w-8 h-8 rounded-full bg-white/5 text-white flex items-center justify-center active:scale-90 transition-all border border-white/10 hover:bg-white/10 shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                       </button>
                     )}
@@ -76,9 +100,26 @@ export default function UpsellModal({ isOpen, onSkip, suggestions }: UpsellModal
         </div>
 
         <div className="p-4 border-t border-white/10 bg-card rounded-b-2xl shrink-0">
-          <button type="button" onClick={onSkip} className="w-full bg-white/5 text-white/90 border border-white/10 font-bold py-3.5 rounded-xl active:scale-[0.98] transition shadow-lg flex items-center justify-center gap-2">
-            <span>{t('upsellNoThanks')}</span>
-          </button>
+          {upsellAdded ? (
+            <button
+              type="button"
+              onClick={onGoToCart}
+              className="w-full bg-[#25D366] text-white font-bold py-3.5 rounded-xl active:scale-[0.98] transition shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-2 uppercase text-[11px] tracking-widest"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+              </svg>
+              <span>{t('upsellCheckoutBtn')}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="w-full bg-white/5 text-white/90 border border-white/10 font-bold py-3.5 rounded-xl active:scale-[0.98] transition shadow-lg flex items-center justify-center gap-2"
+            >
+              <span>{t('upsellNoThanks')}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

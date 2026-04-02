@@ -2,7 +2,7 @@
 
 import { useCart } from '@/context/CartContext';
 import { useLang } from '@/context/LangContext';
-import { menuData } from '@/lib/menuData';
+import { menuData, getItemName } from '@/lib/menuData';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -74,7 +74,7 @@ export default function CartModal({ isOpen, onClose, onCheckout, isPromoActive }
                 <div key={ci.item.id} className="flex justify-between items-center py-3 border-b border-white/5 last:border-0">
                   <div className="flex-1 pr-3">
                     <h4 className="text-[15px] font-bold text-white/95">
-                      {lang === 'en' ? ci.item.nameEn : ci.item.name}
+                      {getItemName(ci.item, lang)}
                     </h4>
                     <span className="text-brand font-bold mt-0.5 inline-block text-[15px]">{ci.item.price}₪</span>
                   </div>

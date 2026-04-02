@@ -124,3 +124,49 @@ body {
     transform: translate3d(4px, 0, 0);
   }
 }
+
+/* Accessibility Modes */
+.accessibility-stop-animations *,
+.accessibility-stop-animations *:before,
+.accessibility-stop-animations *:after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.accessibility-monochrome {
+  filter: grayscale(100%) !important;
+}
+
+.accessibility-contrast {
+  filter: contrast(150%) brightness(110%) !important;
+}
+
+.accessibility-invert {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+.accessibility-readable-font {
+  font-family: Arial, sans-serif !important;
+}
+
+.accessibility-highlight-links a,
+.accessibility-highlight-links button:not(.product-card button) {
+  text-decoration: underline !important;
+  outline: 2px solid var(--brand-red) !important;
+}
+
+.accessibility-sepia {
+  filter: sepia(80%) !important;
+}
+
+.accessibility-check-mark {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: var(--brand-red);
+  padding: 2px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-out;
+}
