@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { MenuItem, categoryBg, getItemName } from '@/lib/menuData';
+import { MenuItem, categoryBg, getItemName, getItemImage } from '@/lib/menuData';
 import { useLang } from '@/context/LangContext';
 import CartControls from './CartControls';
 
@@ -17,6 +17,7 @@ export default function ProductCard({ item, categorySlug, onImageClick }: Produc
   const colors = categoryBg[categorySlug] || { bg: 'bg-card', border: 'border-white/5' };
 
   const displayName = getItemName(item, lang);
+  const imageUrl = getItemImage(item, categorySlug);
   // Always show the "other" language as subtitle  
   const subName = lang === 'ru' ? item.nameEn : lang === 'en' ? item.name : item.nameEn;
 
@@ -34,13 +35,13 @@ export default function ProductCard({ item, categorySlug, onImageClick }: Produc
       )}
 
       {/* Image thumbnail (left) */}
-      {item.image && (
+      {imageUrl && (
         <div
           className="w-[72px] h-[72px] shrink-0 rounded-xl overflow-hidden relative cursor-zoom-in bg-black/20"
-          onClick={() => isAvailable && onImageClick(item.image!)}
+          onClick={() => isAvailable && onImageClick(imageUrl)}
         >
           <Image
-            src={item.image}
+            src={imageUrl}
             alt={item.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -60,7 +61,7 @@ export default function ProductCard({ item, categorySlug, onImageClick }: Produc
             </p>
           )}
           {/* Show ingredients only for lang-matched description if no image */}
-          {!item.image && (
+          {!imageUrl && (
             <p className="text-[10px] text-muted leading-relaxed line-clamp-2 opacity-60 mt-1">
               {lang === 'he' && item.ingredientsHe
                 ? item.ingredientsHe

@@ -31,7 +31,7 @@ const menuData = [
     categoryEn: "Baked Rolls",
     items: [
       { id: "z1", name: "Грибной Амур", nameEn: "Mushroom Amur", price: 60, ingredients: "Рис, грибы шампиньоны, кремчиз, красный болгарский перец, помидор, сырная шапка", ingredientsEn: "Rice, mushrooms, cream cheese, red bell pepper, tomato, cheese topping", image: "img/products/baked_rolls/Mushroom_Amur.webp" },
-      { id: "z2", name: "Белый самурай", nameEn: "White Samurai", price: 60, ingredients: "Рис, лосось, омлет тамаго, креветка, сырная шапка, сверху кунжут и терияки", ingredientsEn: "Rice, salmon, tamago omelet, shrimp, cheese topping, sesame and teriyaki on top" },
+      { id: "z2", name: "Белый самурай", nameEn: "White Samurai", price: 60, ingredients: "Рис, лосось, омлет тамаго, креветка, сырная шапка, сверху кунжут и терияки", ingredientsEn: "Rice, salmon, tamago omelet, shrimp, cheese topping, sesame and teriyaki on top", image: "img/products/baked_rolls/White_Samurai.webp" },
       { id: "z3", name: "Бурный авокадо", nameEn: "Stormy Avocado", price: 60, ingredients: "Рис, лосось, авокадо, морковка, огурец, сырная шапка", ingredientsEn: "Rice, salmon, avocado, carrot, cucumber, cheese topping" },
       { id: "z4", name: "Веган бум", nameEn: "Vegan Boom", price: 55, ingredients: "Рис, авокадо, морковка, огурец, кампье, хасса, сырная шапка, терияки и кунжут", ingredientsEn: "Rice, avocado, carrot, cucumber, kanpyo, lettuce, cheese topping, teriyaki and sesame" }
     ]

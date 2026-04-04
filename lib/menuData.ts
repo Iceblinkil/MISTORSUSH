@@ -29,9 +29,9 @@ export const menuData: MenuCategory[] = [
       { id: 'c1', name: 'Маки Лосось', nameEn: 'Salmon Maki', nameHe: 'מאקי סלמון', price: 30, ingredients: '', ingredientsEn: '', ingredientsHe: '', image: '/img/products/classic_rolls/salomon_maki.webp' },
       { id: 'c2', name: 'Маки Авокадо', nameEn: 'Avocado Maki', nameHe: 'מאקי אבוקדו', price: 28, ingredients: '', ingredientsEn: '', ingredientsHe: '' },
       { id: 'c3', name: 'Маки Кампье', nameEn: 'Kampye Maki', nameHe: 'מאקי קמפיי', price: 25, ingredients: '', ingredientsEn: '', ingredientsHe: '' },
-      { id: 'c4', name: 'Маки Огурец', nameEn: 'Cucumber Maki', nameHe: 'מאקי מלפפון', price: 25, ingredients: '', ingredientsEn: '', ingredientsHe: '' },
+      { id: 'c4', name: 'Маки Огурец', nameEn: 'Cucumber Maki', nameHe: 'מאקי מלפפון', price: 25, ingredients: '', ingredientsEn: '', ingredientsHe: '', image: 'Cucumber_Maki.webp' },
       { id: 'c5', name: 'Маки Морковка', nameEn: 'Carrot Maki', nameHe: 'מאקי גזר', price: 25, ingredients: '', ingredientsEn: '', ingredientsHe: '' },
-      { id: 'c6', name: 'Маки Ассорти', nameEn: 'Assorted Maki', nameHe: 'מאקי מגוון', price: 35, ingredients: '', ingredientsEn: '', ingredientsHe: '' },
+      { id: 'c6', name: 'Маки Ассорти', nameEn: 'Assorted Maki', nameHe: 'מאקי מגוון', price: 35, ingredients: '', ingredientsEn: '', ingredientsHe: '', image: '/img/products/classic_rolls/Assorted_Maki.webp' },
       { id: 'c7', name: 'Филадельфия', nameEn: 'Philadelphia', nameHe: 'פילדלפיה', price: 45, ingredients: 'Рис, огурец, кремчиз, лосось сверху', ingredientsEn: 'Rice, cucumber, cream cheese, salmon on top', ingredientsHe: 'אורז, מלפפון, גבינת שמנת, סלמון מעל', image: '/img/products/classic_rolls/Philadelphia.webp' },
       { id: 'c8', name: 'Филадельфия Крабовые палочки', nameEn: 'Crab Stick Philadelphia', nameHe: 'פילדלפיה מקלות סרטנים', price: 50, ingredients: 'Рис, огурец, кремчиз, крабовые палочки, лосось сверху', ingredientsEn: 'Rice, cucumber, cream cheese, crab sticks, salmon on top', ingredientsHe: 'אורז, מלפפון, גבינת שמנת, מקלות סרטנים, סלמון מעל', image: '/img/products/classic_rolls/Crab_Stick_Philadelphia.webp' },
       { id: 'c9', name: 'Филадельфия Лосось', nameEn: 'Salmon Philadelphia', nameHe: 'פילדלפיה סלמון', price: 50, ingredients: 'Рис, лосось, огурец, кремчиз, лосось сверху', ingredientsEn: 'Rice, salmon, cucumber, cream cheese, salmon on top', ingredientsHe: 'אורז, סלמון, מלפפון, גבינת שמנת, סלמון מעל' },
@@ -56,7 +56,7 @@ export const menuData: MenuCategory[] = [
     slug: 'baked_rolls',
     items: [
       { id: 'z1', name: 'Грибной Амур', nameEn: 'Mushroom Amur', nameHe: 'אמור פטריות', price: 60, ingredients: 'Рис, грибы шампиньоны, кремчиз, красный болгарский перец, помидор, сырная шапка', ingredientsEn: 'Rice, mushrooms, cream cheese, red bell pepper, tomato, cheese topping', ingredientsHe: 'אורז, פטריות, גבינת שמנת, פלפל אדום, עגבנייה, כיפת גבינה', image: '/img/products/baked_rolls/Mushroom_Amur.webp' },
-      { id: 'z2', name: 'Белый самурай', nameEn: 'White Samurai', nameHe: 'סמוראי לבן', price: 60, ingredients: 'Рис, лосось, омлет тамаго, креветка, сырная шапка, сверху кунжут и терияки', ingredientsEn: 'Rice, salmon, tamago omelet, shrimp, cheese topping, sesame and teriyaki on top', ingredientsHe: 'אורז, סלמון, חביתת טמאגו, שרימפס, כיפת גבינה, שומשום וטריאקי מעל' },
+      { id: 'z2', name: 'Белый самурай', nameEn: 'White Samurai', nameHe: 'סמוראי לבן', price: 60, ingredients: 'Рис, лосось, омлет тамаго, креветка, сырная шапка, сверху кунжут и терияки', ingredientsEn: 'Rice, salmon, tamago omelet, shrimp, cheese topping, sesame and teriyaki on top', ingredientsHe: 'אורז, סלמון, חביתת טמאגו, שרימפס, כיפת גבינה, שומשום וטריאקי מעל', image: '/img/products/baked_rolls/White_Samurai.webp' },
       { id: 'z3', name: 'Бурный авокадо', nameEn: 'Stormy Avocado', nameHe: 'אבוקדו סוער', price: 60, ingredients: 'Рис, лосось, авокадо, морковка, огурец, сырная шапка', ingredientsEn: 'Rice, salmon, avocado, carrot, cucumber, cheese topping', ingredientsHe: 'אורז, סלמון, אבוקדו, גזר, מלפפון, כיפת גבינה' },
       { id: 'z4', name: 'Веган бум', nameEn: 'Vegan Boom', nameHe: 'בום טבעוני', price: 55, ingredients: 'Рис, авокадо, морковка, огурец, кампье, хасса, сырная шапка, терияки и кунжут', ingredientsEn: 'Rice, avocado, carrot, cucumber, kanpyo, lettuce, cheese topping, teriyaki and sesame', ingredientsHe: 'אורז, אבוקדו, גזר, מלפפון, קמפיי, חסה, כיפת גבינה, טריאקי ושומשום' },
     ],
@@ -142,4 +142,28 @@ export function getCategoryName(cat: MenuCategory, lang: string): string {
   if (lang === 'he' && cat.categoryHe) return cat.categoryHe;
   if (lang === 'en') return cat.categoryEn;
   return cat.category;
+}
+
+/** Helper: resolve full image path if shorthand is used */
+export function resolveImagePath(image: string | undefined | null, categorySlug: string): string | null {
+  if (!image) return null;
+
+  let processed = image;
+  // Auto-fix: if it starts with /img/ but not /img/products/, insert it
+  if (processed.startsWith('/img/') && !processed.startsWith('/img/products/')) {
+    processed = processed.replace('/img/', '/img/products/');
+  }
+
+  // If it's already a full path or URL, return as is
+  if (processed.startsWith('/') || processed.startsWith('http')) {
+    return processed;
+  }
+  
+  // Otherwise, assume it's just a filename in the standard category folder
+  return `/img/products/${categorySlug}/${processed}`;
+}
+
+/** Helper: resolve image path specifically for a MenuItem */
+export function getItemImage(item: MenuItem, categorySlug: string): string | null {
+  return resolveImagePath(item.image, categorySlug);
 }
