@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLang } from '@/context/LangContext';
-import { menuData, MenuItem } from '@/lib/menuData';
+import { menuData as staticMenuData, MenuItem, MenuCategory } from '@/lib/menuData';
 import { verifyPromoDay } from '@/lib/promoUtils';
 import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
@@ -35,6 +35,7 @@ export default function Home() {
   const { lang, t } = useLang();
 
   // State
+  const [menuData, setMenuData] = useState<MenuCategory[]>(staticMenuData);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isPromoActive, setIsPromoActive] = useState(false);
   const [isSiteDisabled, setIsSiteDisabled] = useState(false);
@@ -61,6 +62,59 @@ export default function Home() {
   // Dynamic header height
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(320);
+
+  // Fetch live menu from Supabase
+  useEffect(() => {
+    async function fetchLiveMenu() {
+      const { data, error } = await sb.from('products').select('*').neq('category', 'system_config');
+      if (error || !data) return;
+
+      const liveCategories: MenuCategory[] = staticMenuData.map(cat => ({
+        ...cat,
+        items: [...cat.items] // Copy static items first
+      }));
+
+      data.forEach(p => {
+        // Find category or create if new
+        let catObj = liveCategories.find(c => c.slug === p.category);
+        if (!catObj) {
+          catObj = { category: p.category, categoryEn: p.category, slug: p.category, items: [] };
+          liveCategories.push(catObj);
+        }
+
+        const staticItem = staticMenuData.find(c => c.slug === p.category)?.items.find(i => i.id === p.item_id);
+        const existingIndex = catObj.items.findIndex(i => i.id === p.item_id);
+
+        const mappedItem = {
+          id: p.item_id,
+          name: p.name,
+          nameEn: p.name_en,
+          price: p.price,
+          ingredients: p.ingredients,
+          ingredientsEn: p.ingredients_en,
+          image: p.image_url || staticItem?.image,
+          is_available: p.is_available
+        };
+
+        if (existingIndex !== -1) {
+          // If the item exists in static, overwrite it with DB data, or remove if unavailable
+          if (p.is_available) {
+            catObj.items[existingIndex] = mappedItem;
+          } else {
+            catObj.items.splice(existingIndex, 1);
+          }
+        } else {
+          // If it's a completely new DB item, add it
+          if (p.is_available) {
+            catObj.items.push(mappedItem);
+          }
+        }
+      });
+
+      setMenuData(liveCategories.filter(c => c.items.length > 0));
+    }
+    fetchLiveMenu();
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -223,11 +277,13 @@ export default function Home() {
             />
           ))
         ) : (
-          <MenuSection
-            key={menuData[activeCategoryIndex].slug}
-            category={menuData[activeCategoryIndex]}
-            onImageClick={(url) => setLightboxImage(url)}
-          />
+          menuData[activeCategoryIndex] && (
+            <MenuSection
+              key={menuData[activeCategoryIndex].slug}
+              category={menuData[activeCategoryIndex]}
+              onImageClick={(url) => setLightboxImage(url)}
+            />
+          )
         )}
       </main>
 
@@ -282,7 +338,7 @@ export default function Home() {
       />
 
       {/* Accessibility Floating Button */}
-      <button 
+      <button
         onClick={() => setIsAccessibilityOpen(true)}
         className="fixed left-4 bottom-24 w-12 h-12 bg-white text-blue-600 rounded-full shadow-2xl flex items-center justify-center z-[50] hover:scale-110 active:scale-95 transition-all border-2 border-transparent"
       >
@@ -316,7 +372,7 @@ export default function Home() {
             <div className="w-16 h-1.5 bg-amber-500 rounded-full mb-6 relative z-10" />
             <div className="space-y-4 text-white/80 font-medium leading-relaxed text-sm relative z-10">
               <p>
-                {lang === 'ru' 
+                {lang === 'ru'
                   ? "Друзья, мы получили очень много заказов и хотим, чтобы каждый из них был выполнен идеально. Чтобы не подвести вас и сохранить качество, мы временно приостановили прием новых чеков."
                   : "Friends, we've received many orders and want each one to be perfect. To maintain quality and not let you down, we've temporarily paused accepting new orders."}
               </p>
@@ -329,7 +385,7 @@ export default function Home() {
             <div className="mt-8 pt-6 border-t border-white/10 w-full relative z-10">
               <p className="text-[#25D366] text-[11px] sm:text-xs font-bold flex items-center justify-center gap-2 text-center leading-snug">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {lang === 'ru' 
+                {lang === 'ru'
                   ? "Ваш уже оформленный заказ в работе и будет доставлен вовремя"
                   : "Your already placed order is being processed and will be delivered on time"}
               </p>
@@ -351,8 +407,8 @@ export default function Home() {
         onClose={() => setIsPromosOpen(false)}
         isPromoActive={isPromoActive}
       />
-      <Footer 
-        onAboutClick={() => setIsAboutOpen(true)} 
+      <Footer
+        onAboutClick={() => setIsAboutOpen(true)}
         onPromosClick={() => setIsPromosOpen(true)}
       />
     </>

@@ -31,7 +31,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) throw error;
         if (data.user) {
-          await sb.from('profiles').insert([{ id: data.user.id, email, full_name: '', phone: '', address: '', role: 'user' }]);
+          await sb.from('profiles').insert([{ id: data.user.id, email, full_name: '', phone: '', address: '' }]);
         }
         alert(t('alertAuthSuccessRegister'));
         setMode('login');
