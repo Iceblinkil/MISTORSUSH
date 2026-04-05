@@ -108,6 +108,12 @@ export function resolveImagePath(image: string | undefined | null, categorySlug:
   if (!image) return null;
 
   let processed = image;
+  
+  // Auto-prepend leading slash if it starts with 'img/'
+  if (processed.startsWith('img/')) {
+    processed = '/' + processed;
+  }
+
   // Auto-fix: if it starts with /img/ but not /img/products/, insert it
   if (processed.startsWith('/img/') && !processed.startsWith('/img/products/')) {
     processed = processed.replace('/img/', '/img/products/');

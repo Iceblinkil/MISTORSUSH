@@ -43,9 +43,11 @@ export const MenuProvider = ({ children }: { children: React.ReactNode }) => {
             id: String(p.id),
             name: p.name,
             nameEn: p.name_en || '',
+            nameHe: p.name_he || '',
             price: p.price,
             ingredients: p.ingredients || '',
             ingredientsEn: p.ingredients_en || '',
+            ingredientsHe: p.ingredients_he || '',
             image: p.image_url,
             is_available: p.is_available
           });

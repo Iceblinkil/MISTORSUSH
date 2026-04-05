@@ -25,9 +25,11 @@ interface SupabaseProduct {
   id: any;
   name: string;
   name_en: string;
+  name_he: string;
   price: number;
   ingredients: string;
   ingredients_en: string;
+  ingredients_he: string;
   is_available: boolean;
   category: string;
   image_url?: string;
@@ -263,11 +265,11 @@ export default function AdminPage() {
     if (!selectedProduct) return;
     setSaveMessage('Сохраняем...');
     if (isNewProduct) {
-      const { id, ingredients, ingredients_en, name_en, ...insertPayload } = selectedProduct;
+      const { id, ...insertPayload } = selectedProduct;
       const { error } = await sb.from('products').insert([insertPayload]);
       if (error) { setSaveMessage('Ошибка: ' + error.message); return; }
     } else {
-      const { id, ingredients, ingredients_en, name_en, ...updatePayload } = selectedProduct;
+      const { id, ...updatePayload } = selectedProduct;
       const { error } = await sb.from('products').update(updatePayload).eq('id', selectedProduct.id);
       if (error) { setSaveMessage('Ошибка: ' + error.message); return; }
     }
@@ -311,9 +313,11 @@ export default function AdminPage() {
       id: 0,
       name: '',
       name_en: '',
+      name_he: '',
       price: 0,
       ingredients: '',
       ingredients_en: '',
+      ingredients_he: '',
       is_available: true,
       category: menuCategories[0]?.slug || '',
     });
@@ -740,14 +744,24 @@ export default function AdminPage() {
 
                        <div className="space-y-6 relative z-10">
                           <div className="grid md:grid-cols-2 gap-6">
-                             <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all col-span-2">
-                               <label className="text-[9px] font-black uppercase tracking-widest text-muted/40">Название (RU)</label>
-                               <input type="text"
-                                 value={selectedProduct.name}
-                                 onChange={e => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
-                                 placeholder="Название на русском..."
-                                 className="w-full bg-transparent border-none outline-none font-black text-white text-xl placeholder:text-white/5"
-                               />
+                             <div className="col-span-1 md:col-span-2 space-y-4">
+                               <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all">
+                                 <label className="text-[9px] font-black uppercase tracking-widest text-muted/40">Название (RU / EN / HE)</label>
+                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                   <input type="text" value={selectedProduct.name} onChange={e => setSelectedProduct({ ...selectedProduct, name: e.target.value })} placeholder="Название (RU)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1" />
+                                   <input type="text" value={selectedProduct.name_en || ''} onChange={e => setSelectedProduct({ ...selectedProduct, name_en: e.target.value })} placeholder="Название (EN)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1" />
+                                   <input type="text" value={selectedProduct.name_he || ''} onChange={e => setSelectedProduct({ ...selectedProduct, name_he: e.target.value })} placeholder="Название (HE)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1" dir="rtl" />
+                                 </div>
+                               </div>
+
+                               <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all">
+                                 <label className="text-[9px] font-black uppercase tracking-widest text-muted/40">Ингредиенты (RU / EN / HE)</label>
+                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                   <textarea value={selectedProduct.ingredients || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients: e.target.value })} placeholder="Ингредиенты (RU)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" />
+                                   <textarea value={selectedProduct.ingredients_en || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients_en: e.target.value })} placeholder="Ингредиенты (EN)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" />
+                                   <textarea value={selectedProduct.ingredients_he || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients_he: e.target.value })} placeholder="Ингредиенты (HE)" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" dir="rtl" />
+                                 </div>
+                               </div>
                              </div>
 
                              <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all">
@@ -861,7 +875,28 @@ export default function AdminPage() {
                                   {/* Header: Name and Status Toggle */}
                                   <div className="flex justify-between items-start gap-6">
                                     <div className="flex-1 space-y-1">
-                                      <div className="font-black text-white text-lg md:text-xl leading-tight tracking-tight uppercase italic">{product.name}</div>
+                                      {isEditing ? (
+                                        <div className="space-y-3 pb-3">
+                                          <div className="bg-dark/40 border border-white/5 rounded-xl p-3">
+                                            <label className="text-[9px] uppercase tracking-widest text-muted/40 mb-2 block">Название (RU / EN / HE)</label>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                              <input type="text" value={selectedProduct.name} onChange={e => setSelectedProduct({ ...selectedProduct, name: e.target.value })} placeholder="RU" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1 font-bold" />
+                                              <input type="text" value={selectedProduct.name_en || ''} onChange={e => setSelectedProduct({ ...selectedProduct, name_en: e.target.value })} placeholder="EN" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1 font-bold" />
+                                              <input type="text" value={selectedProduct.name_he || ''} onChange={e => setSelectedProduct({ ...selectedProduct, name_he: e.target.value })} placeholder="HE" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-sm pb-1 font-bold" dir="rtl" />
+                                            </div>
+                                          </div>
+                                          <div className="bg-dark/40 border border-white/5 rounded-xl p-3">
+                                            <label className="text-[9px] uppercase tracking-widest text-muted/40 mb-2 block">Ингредиенты (RU / EN / HE)</label>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                              <textarea value={selectedProduct.ingredients || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients: e.target.value })} placeholder="RU" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" />
+                                              <textarea value={selectedProduct.ingredients_en || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients_en: e.target.value })} placeholder="EN" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" />
+                                              <textarea value={selectedProduct.ingredients_he || ''} onChange={e => setSelectedProduct({ ...selectedProduct, ingredients_he: e.target.value })} placeholder="HE" className="w-full bg-transparent border-b border-white/10 outline-none text-white text-xs pb-1 min-h-[40px] resize-y" dir="rtl" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="font-black text-white text-lg md:text-xl leading-tight tracking-tight uppercase italic">{product.name}</div>
+                                      )}
                                       <div className={`text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 ${product.is_available ? 'text-emerald-400' : 'text-brand'}`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${product.is_available ? 'bg-emerald-400 animate-pulse' : 'bg-brand'}`} />
                                         {product.is_available ? 'Виден в меню' : 'Скрыт от клиентов'}
