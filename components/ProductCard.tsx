@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { MenuItem, categoryBg, getItemName, getItemImage } from '@/lib/menuData';
+import { MenuItem, categoryBg, getItemName, getItemImage, getItemIngredients } from '@/lib/menuData';
 import { useLang } from '@/context/LangContext';
 import CartControls from './CartControls';
 
@@ -63,11 +63,7 @@ export default function ProductCard({ item, categorySlug, onImageClick }: Produc
           {/* Show ingredients only for lang-matched description if no image */}
           {!imageUrl && (
             <p className="text-[10px] text-muted leading-relaxed line-clamp-2 opacity-60 mt-1">
-              {lang === 'he' && item.ingredientsHe
-                ? item.ingredientsHe
-                : lang === 'en'
-                ? item.ingredientsEn
-                : item.ingredients}
+              {getItemIngredients(item, lang)}
             </p>
           )}
         </div>
