@@ -5,6 +5,8 @@ import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { menuCategories, resolveImagePath } from '@/lib/menuData';
 import imageCompression from 'browser-image-compression';
+import { isAdmin } from '@/lib/authUtils';
+import { useRouter } from 'next/navigation';
 
 // --- Types ---
 interface Order {
@@ -51,12 +53,9 @@ function getStatusStyle(status: string): string {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -80,15 +79,33 @@ export default function AdminPage() {
   const [archiveFilter, setArchiveFilter] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all');
   const [adminProductCat, setAdminProductCat] = useState<string>('');
 
-  const ADMIN_EMAILS = ['mistorsush@gmail.com', 'vladislav.chistov1337@gmail.com', 'admin@mistorsush.com'];
-
   useEffect(() => {
     sb.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user || null;
       setCurrentUser(user);
-      if (user && ADMIN_EMAILS.includes(user.email || '')) setIsAuthorized(true);
+      if (user && isAdmin(user.email)) {
+        setIsAuthorized(true);
+      } else {
+        router.replace('/');
+      }
     });
-  }, []);
+
+    const { data: authListener } = sb.auth.onAuthStateChange(
+      (event, session) => {
+        const user = session?.user || null;
+        setCurrentUser(user);
+        if (user && isAdmin(user.email)) {
+          setIsAuthorized(true);
+        } else {
+          router.replace('/');
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router]);
 
   useEffect(() => {
     if (isAuthorized) {
@@ -97,28 +114,6 @@ export default function AdminPage() {
       loadSiteStatus();
     }
   }, [isAuthorized]);
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setAuthError('');
-    setAuthLoading(true);
-    try {
-      const { data, error } = await sb.auth.signInWithPassword({ email: authEmail, password: authPassword });
-      if (error) throw error;
-      const user = data.user;
-      if (user && ADMIN_EMAILS.includes(user.email || '')) {
-        setCurrentUser(user);
-        setIsAuthorized(true);
-      } else {
-        await sb.auth.signOut();
-        setAuthError('Доступ запрещен. Нет прав администратора.');
-      }
-    } catch (err: unknown) {
-      setAuthError((err as Error).message || 'Ошибка авторизации');
-    } finally {
-      setAuthLoading(false);
-    }
-  }
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -372,42 +367,19 @@ export default function AdminPage() {
     return new Date(dateStr).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
-  // Auth screen
-  if (!isAuthorized) {
+  // Global loading overlay if authorization is null
+  if (isAuthorized === null) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center p-4">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -right-20 -top-20 w-80 h-80 bg-brand/10 blur-[100px] rounded-full animate-pulse" />
-          <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-brand/5 blur-[100px] rounded-full animate-pulse" />
-        </div>
-        <div className="w-full max-w-md bg-card border border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative z-10">
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-brand/10 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl border border-brand/20">🍣</div>
-            <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">
-              MISTOR<span className="text-brand">SUSH</span>
-            </h1>
-            <p className="text-muted text-[10px] font-black uppercase tracking-[0.3em] mt-2 opacity-60">Admin Security Layer</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Email</label>
-              <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required placeholder="admin@example.com"
-                className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-black tracking-widest text-muted ml-1">Пароль</label>
-              <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required placeholder="••••••••"
-                className="w-full bg-dark/50 border border-white/5 rounded-xl px-5 py-4 text-sm focus:border-brand/50 outline-none transition-all placeholder:text-white/5 text-white font-medium" />
-            </div>
-            {authError && <p className="text-brand text-xs font-bold text-center">{authError}</p>}
-            <button type="submit" disabled={authLoading}
-              className="w-full py-4 bg-white text-dark font-black rounded-xl hover:bg-brand hover:text-white transition-all active:scale-[0.98] shadow-xl uppercase text-xs tracking-[0.2em] disabled:opacity-60">
-              {authLoading ? '...' : 'Войти в панель'}
-            </button>
-          </form>
-        </div>
+      <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 border-4 border-brand/20 border-t-brand rounded-full animate-spin mb-4" />
+        <p className="text-muted text-xs font-black uppercase tracking-widest animate-pulse">Проверка доступа...</p>
       </div>
     );
+  }
+
+  // Not authorized fallback (while redirecting)
+  if (!isAuthorized) {
+    return null;
   }
 
   // Admin dashboard
@@ -427,12 +399,16 @@ export default function AdminPage() {
             <div className="w-4 h-0.5 bg-brand rounded-full transition-all group-hover:w-full"></div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button onClick={() => router.push('/')}
+            className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-brand border border-brand/20 px-3 py-2 rounded-xl hover:bg-brand hover:text-white transition-all shadow-lg shadow-brand/10">
+            На сайт
+          </button>
           <button onClick={loadOrders} className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-white transition-colors border border-white/10 px-3 py-2 rounded-xl hover:bg-white/5 md:flex hidden">
             🔄 Обновить
           </button>
           <button onClick={() => sb.auth.signOut().then(() => setIsAuthorized(false))}
-            className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-brand transition-colors border border-white/10 px-3 py-2 rounded-xl hover:bg-brand/5">
+            className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted hover:text-brand transition-colors border border-white/10 px-3 py-2 rounded-xl hover:bg-brand/5">
             Выйти
           </button>
         </div>
