@@ -71,7 +71,6 @@ export default function AdminPage() {
 
   // Site status state
   const [isSiteActive, setIsSiteActive] = useState(true);
-  const [siteStatusId, setSiteStatusId] = useState<number | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
 
   // Search & Filtering state
@@ -169,33 +168,22 @@ export default function AdminPage() {
   }
 
   async function loadSiteStatus() {
-    const { data } = await sb.from('products').select('*').eq('name', 'system_site_status');
-    if (data && data.length > 0) {
-      setIsSiteActive(data[0].is_available);
-      setSiteStatusId(data[0].id);
+    const { data, error } = await sb.from('config').select('is_active').eq('key', 'site_status').single();
+    if (!error && data) {
+      setIsSiteActive(data.is_active);
     } else {
       // Create if doesn't exist
-      const newStatus = {
-        name: 'system_site_status',
-        category: 'system_config',
-        price: 0,
-        is_available: true,
-        ingredients: 'Флаг работы сайта (true - включен, false - выключен)',
-        item_id: 'SYS_STATUS'
-      };
-      const { data: newData } = await sb.from('products').insert([newStatus]).select().single();
+      const { data: newData } = await sb.from('config').insert([{ key: 'site_status', is_active: true }]).select().single();
       if (newData) {
         setIsSiteActive(true);
-        setSiteStatusId(newData.id);
       }
     }
   }
 
   async function toggleSiteStatus() {
-    if (siteStatusId === null) return;
     setStatusLoading(true);
     const newVal = !isSiteActive;
-    const { error } = await sb.from('products').update({ is_available: newVal }).eq('id', siteStatusId);
+    const { error } = await sb.from('config').update({ is_active: newVal }).eq('key', 'site_status');
     if (!error) {
       setIsSiteActive(newVal);
     }

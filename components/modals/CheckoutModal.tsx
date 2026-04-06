@@ -14,9 +14,10 @@ interface CheckoutModalProps {
   onBack: () => void;
   isPromoActive: boolean;
   currentUser: User | null;
+  isSiteDisabled?: boolean;
 }
 
-export default function CheckoutModal({ isOpen, onClose, onBack, isPromoActive, currentUser }: CheckoutModalProps) {
+export default function CheckoutModal({ isOpen, onClose, onBack, isPromoActive, currentUser, isSiteDisabled }: CheckoutModalProps) {
   const { cartItems, cartSubtotal, cart, clearCart } = useCart();
   const { lang, t } = useLang();
   const { menuData } = useMenu();
@@ -139,6 +140,12 @@ export default function CheckoutModal({ isOpen, onClose, onBack, isPromoActive, 
 
     setSubmitting(true);
     try {
+      if (isSiteDisabled) {
+        alert("К сожалению, в данный момент мы не принимаем новые заказы. Пожалуйста, попробуйте позже.");
+        setSubmitting(false);
+        return;
+      }
+
       if (sb) {
         const orderData: Record<string, unknown> = {
           customer_name: name,

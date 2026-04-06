@@ -94,8 +94,8 @@ export default function Home() {
   }, []);
 
   async function checkSiteStatus() {
-    const { data, error } = await sb.from('products').select('is_available').eq('name', 'system_site_status').single();
-    if (!error && data && data.is_available === false) {
+    const { data, error } = await sb.from('config').select('is_active').eq('key', 'site_status').single();
+    if (!error && data && data.is_active === false) {
       setIsSiteDisabled(true);
     }
   }
@@ -275,6 +275,7 @@ export default function Home() {
         onBack={() => { setIsCheckoutOpen(false); setIsCartOpen(true); }}
         isPromoActive={isPromoActive}
         currentUser={currentUser}
+        isSiteDisabled={isSiteDisabled}
       />
 
       <AuthModal
