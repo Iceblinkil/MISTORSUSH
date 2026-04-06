@@ -5,6 +5,7 @@ import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { menuCategories, resolveImagePath } from '@/lib/menuData';
 import imageCompression from 'browser-image-compression';
+import ScrollTopButton from '@/components/ScrollTopButton';
 
 // --- Types ---
 interface Order {
@@ -69,6 +70,7 @@ export default function AdminPage() {
   const [selectedProduct, setSelectedProduct] = useState<SupabaseProduct | null>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   // Site status state
   const [isSiteActive, setIsSiteActive] = useState(true);
@@ -845,7 +847,7 @@ export default function AdminPage() {
                                   {isUploading && <span className="text-brand animate-pulse">Загрузка...</span>}
                                 </label>
                                 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 min-w-0">
                                   <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/5 flex items-center justify-center text-muted overflow-hidden shrink-0 shadow-lg transition-all group-hover:border-brand/30">
                                     {(selectedProduct.image_url) ? (
                                       <img src={resolveImagePath(selectedProduct.image_url, selectedProduct.category) || ''} alt="" className="w-full h-full object-cover" />
@@ -855,8 +857,8 @@ export default function AdminPage() {
                                       </svg>
                                     )}
                                   </div>
-                                  <div className="flex-1 overflow-hidden">
-                                     <div className="text-[12px] text-white/40 truncate font-mono italic">
+                                  <div className="flex-1 overflow-hidden min-w-0">
+                                     <div className="text-[12px] text-white/40 truncate font-mono italic block w-full">
                                        {resolveImagePath(selectedProduct.image_url, selectedProduct.category) || 'Нажмите для выбора файла...'}
                                      </div>
                                   </div>
@@ -918,9 +920,92 @@ export default function AdminPage() {
                                 }`} />
 
                                 <div className="p-6 relative z-10 space-y-5">
-                                  {/* Header: Name and Status Toggle */}
-                                  <div className="flex justify-between items-start gap-6">
-                                    <div className="flex-1 space-y-1">
+                                  {/* Header: Buttons first for Top on Mobile, Right on Desktop */}
+                                  <div className="flex flex-col sm:flex-row-reverse justify-between items-start gap-4 sm:gap-6 cursor-pointer w-full" onClick={(e) => {
+                                    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input') || (e.target as HTMLElement).closest('textarea') || (e.target as HTMLElement).closest('select')) return;
+                                    if (isEditing) {
+                                      setSelectedProduct(null);
+                                    } else {
+                                      setSelectedProduct(product);
+                                      setIsNewProduct(false);
+                                    }
+                                  }}>
+                                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end sm:justify-start pt-2 sm:pt-0">
+                                      <button
+                                        onClick={async () => {
+                                          if (isEditing) { await saveProduct(); }
+                                          else { setSelectedProduct(product); setIsNewProduct(false); }
+                                        }}
+                                        className="w-11 h-11 rounded-2xl bg-brand text-white flex items-center justify-center shadow-xl shadow-brand/20 active:scale-90 transition-all hover:bg-brand/80"
+                                      >
+                                        {isEditing ? (
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                          </svg>
+                                        ) : (
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                          </svg>
+                                        )}
+                                      </button>
+                                      {isEditing && (
+                                        <button
+                                          onClick={() => setSelectedProduct(null)}
+                                          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 text-muted flex items-center justify-center shadow-xl active:scale-90 transition-all hover:bg-white/10 hover:text-white"
+                                          title="Свернуть"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                          </svg>
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => toggleProductAvailability(product)}
+                                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${
+                                          product.is_available
+                                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
+                                            : 'bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20'
+                                        }`}
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                                          {product.is_available ? (
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.412 8.352 7.244 5.5 12 5.5s8.588 2.852 9.964 6.178c.118.285.118.592 0 .877C20.588 15.648 16.756 18.5 12 18.5s-8.588-2.852-9.964-6.178Z" />
+                                          ) : (
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                          )}
+                                        </svg>
+                                      </button>
+                                      {confirmDeleteId === product.id ? (
+                                        <div className="flex items-center gap-2 animate-in fade-in zoom-in-95 duration-300">
+                                          <button
+                                            onClick={() => { deleteProductAdmin(product); setConfirmDeleteId(null); }}
+                                            className="h-11 px-4 rounded-2xl bg-red-500 text-white flex items-center justify-center shadow-xl active:scale-90 transition-all font-black text-[10px] uppercase"
+                                          >
+                                            Да
+                                          </button>
+                                          <button
+                                            onClick={() => setConfirmDeleteId(null)}
+                                            className="w-11 h-11 rounded-2xl bg-white/10 border border-white/5 text-white flex items-center justify-center shadow-xl active:scale-90 transition-all"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => setConfirmDeleteId(product.id)}
+                                          className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20"
+                                          title="Удалить товар"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                          </svg>
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <div className="flex-1 w-full space-y-1">
                                       {isEditing ? (
                                         <div className="space-y-3 pb-3">
                                           <div className="bg-dark/40 border border-white/5 rounded-xl p-3">
@@ -941,62 +1026,18 @@ export default function AdminPage() {
                                           </div>
                                         </div>
                                       ) : (
-                                        <div className="font-black text-white text-lg md:text-xl leading-tight tracking-tight uppercase italic">{product.name}</div>
+                                        <div className="font-black text-white text-lg md:text-xl leading-tight tracking-tight uppercase italic break-words w-full">{product.name}</div>
                                       )}
                                       <div className={`text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 ${product.is_available ? 'text-emerald-400' : 'text-brand'}`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${product.is_available ? 'bg-emerald-400 animate-pulse' : 'bg-brand'}`} />
                                         {product.is_available ? 'Виден в меню' : 'Скрыт от клиентов'}
                                       </div>
                                     </div>
-                                    
-                                    <div className="flex items-center gap-2 shrink-0">
-                                      <button
-                                        onClick={async () => {
-                                          if (isEditing) { await saveProduct(); }
-                                          else { setSelectedProduct(product); setIsNewProduct(false); }
-                                        }}
-                                        className="w-11 h-11 rounded-2xl bg-brand text-white flex items-center justify-center shadow-xl shadow-brand/20 active:scale-90 transition-all hover:bg-brand/80"
-                                      >
-                                        {isEditing ? (
-                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                          </svg>
-                                        ) : (
-                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                                          </svg>
-                                        )}
-                                      </button>
-                                      <button
-                                        onClick={() => toggleProductAvailability(product)}
-                                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${
-                                          product.is_available
-                                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
-                                            : 'bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20'
-                                        }`}
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                                          {product.is_available ? (
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644C3.412 8.352 7.244 5.5 12 5.5s8.588 2.852 9.964 6.178c.118.285.118.592 0 .877C20.588 15.648 16.756 18.5 12 18.5s-8.588-2.852-9.964-6.178Z" />
-                                          ) : (
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                                          )}
-                                        </svg>
-                                      </button>
-                                      <button
-                                        onClick={() => deleteProductAdmin(product)}
-                                        className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20"
-                                        title="Удалить товар"
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                        </svg>
-                                      </button>
-                                    </div>
                                   </div>
 
-                                  <div className="grid sm:grid-cols-2 gap-4">
-                                    <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all">
+                                  {isEditing && (
+                                    <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-4 duration-300 border-t border-white/5 pt-5 mt-5">
+                                      <div className="bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all">
                                       <label className="text-[9px] font-black uppercase tracking-widest text-muted/40">Цена</label>
                                       <div className="flex items-center gap-2">
                                         <input type="number"
@@ -1032,14 +1073,14 @@ export default function AdminPage() {
                                       </div>
                                     </div>
 
-                                    <div className="col-span-1 sm:col-span-2 bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all cursor-pointer relative"
+                                    <div className="col-span-2 bg-dark/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-1.5 focus-within:border-brand/40 transition-all cursor-pointer relative"
                                       onClick={() => document.getElementById(`upload-input-${product.id}`)?.click()}>
                                       <label className="text-[9px] font-black uppercase tracking-widest text-muted/40 flex justify-between">
                                         Загрузить фото
                                         {isUploading && <span className="text-brand animate-pulse">Загрузка...</span>}
                                       </label>
                                       
-                                      <div className="flex items-center gap-4">
+                                      <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-muted overflow-hidden shrink-0 shadow-lg transition-all group-hover:border-brand/30">
                                           {(currentProduct?.image_url) ? (
                                             <img src={resolveImagePath(currentProduct.image_url, product.category) || ''} alt="" className="w-full h-full object-cover" />
@@ -1049,8 +1090,8 @@ export default function AdminPage() {
                                             </svg>
                                           )}
                                         </div>
-                                        <div className="flex-1 overflow-hidden">
-                                           <div className="text-[11px] text-white/40 truncate font-mono italic">
+                                        <div className="flex-1 overflow-hidden min-w-0">
+                                           <div className="text-[11px] text-white/40 truncate font-mono italic block w-full">
                                              {resolveImagePath(currentProduct?.image_url, product.category) || 'Нажмите для выбора файла...'}
                                            </div>
                                         </div>
@@ -1074,6 +1115,7 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                   </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -1194,6 +1236,7 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+      <ScrollTopButton />
     </div>
   );
 }
