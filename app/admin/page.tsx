@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { sb } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { menuCategories, resolveImagePath } from '@/lib/menuData';
@@ -108,8 +108,11 @@ export default function AdminPage() {
     };
   }, [router]);
 
+  const initFetched = useRef(false);
+
   useEffect(() => {
-    if (isAuthorized) {
+    if (isAuthorized && !initFetched.current) {
+      initFetched.current = true;
       loadOrders();
       loadProducts();
       loadSiteStatus();

@@ -105,7 +105,7 @@ export const i18n = {
     itemsLabel: 'позиций',
     footerBrandDesc: 'Доставка суши в Ашкелоне. Только свежие ингредиенты.',
     footerAllRights: 'Все права защищены.',
-    footerMadeBy: 'Сделано в '
+    footerMadeBy: 'Разработано в '
   },
   en: {
     subtitle: 'Sushi in Ashkelon',
@@ -213,7 +213,7 @@ export const i18n = {
     itemsLabel: 'items',
     footerBrandDesc: 'Sushi delivery in Ashkelon. Only fresh ingredients.',
     footerAllRights: 'All rights reserved.',
-    footerMadeBy: 'Made by '
+    footerMadeBy: 'Developed by '
   },
   he: {
     subtitle: 'סושי באשקלון',

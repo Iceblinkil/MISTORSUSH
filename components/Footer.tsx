@@ -25,19 +25,19 @@ export default function Footer({ onAboutClick, onPromosClick }: FooterProps) {
   return (
     <footer className="relative bg-[#0a0c10] border-t border-white/5 py-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
-        <div 
+        <div
           className="grid grid-cols-1 md:grid-cols-3 gap-12 items-center text-center"
           dir={lang === 'he' ? 'rtl' : 'ltr'}
         >
-          
+
           {/* Brand Column (Left) */}
           <div className="flex flex-col items-center md:items-start space-y-4">
             <div className="flex items-center gap-4">
-              <Image 
-                src="/img/mistorsush_logo.webp" 
-                alt="Logo" 
-                width={56} 
-                height={56} 
+              <Image
+                src="/img/mistorsush_logo.webp"
+                alt="Logo"
+                width={56}
+                height={56}
                 className="rounded-full border border-white/10 shadow-2xl transition-transform hover:scale-105 duration-500"
               />
               <h2 className="text-lg font-black tracking-[0.2em] text-white uppercase">
@@ -53,7 +53,7 @@ export default function Footer({ onAboutClick, onPromosClick }: FooterProps) {
           <div className="flex flex-col items-center space-y-8">
             <nav className="flex gap-x-8 gap-y-4 flex-wrap justify-center">
               {infoItems.map((item) => (
-                <button 
+                <button
                   key={item.name}
                   onClick={item.onClick}
                   className="text-muted hover:text-white text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 hover:scale-110 active:opacity-70"
@@ -62,7 +62,7 @@ export default function Footer({ onAboutClick, onPromosClick }: FooterProps) {
                 </button>
               ))}
             </nav>
-            
+
             <div className="flex gap-5">
               {socialLinks.map((social) => (
                 <a
@@ -76,7 +76,7 @@ export default function Footer({ onAboutClick, onPromosClick }: FooterProps) {
                   <span className="text-xl">
                     {social.icon === '📸' ? (
                       <svg className="w-5 h-5 text-white group-hover:text-brand transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.058-1.69-.072-4.949-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.058-1.69-.072-4.949-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                       </svg>
                     ) : (
                       <svg className="w-5 h-5 text-white group-hover:text-brand transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -111,16 +111,32 @@ export default function Footer({ onAboutClick, onPromosClick }: FooterProps) {
         </div>
 
         {/* Footer Bottom */}
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+        
+        {/* Legal Links (New) */}
+        <div className="mt-8 mb-4 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2">
+          <Link href="/takanon" className="text-[10px] uppercase font-black tracking-widest text-muted hover:text-white transition-colors">
+            {lang === 'he' ? 'תקנון האתר' : lang === 'ru' ? 'Условия использования' : 'Terms of Service'}
+          </Link>
+          <Link href="/privacy" className="text-[10px] uppercase font-black tracking-widest text-muted hover:text-white transition-colors">
+            {lang === 'he' ? 'מדיניות פרטיות' : lang === 'ru' ? 'Политика конфиденциальности' : 'Privacy Policy'}
+          </Link>
+          <Link href="/accessibility" className="text-[10px] uppercase font-black tracking-widest text-muted hover:text-white transition-colors">
+            {lang === 'he' ? 'הצהרת נגישות' : lang === 'ru' ? 'Заявление о доступности' : 'Accessibility Statement'}
+          </Link>
+        </div>
+
+        <div className="mt-6 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-muted text-[10px] font-black uppercase tracking-widest opacity-60">
             © 2026 MISTORSUSH. {t('footerAllRights')}
           </p>
-          
+
           <div className="text-muted text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
             <span className="opacity-60">{t('footerMadeBy')}</span>
-            <a 
-              href="https://mirux.vercel.app/" 
-              className="text-white hover:text-brand transition-all duration-300 font-black relative group px-1"
+            <a
+              href="https://mirux.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-brand transition-all duration-300 font-black relative group px-1 opacity-50 hover:opacity-100"
             >
               MIRUX
               <span className="absolute -bottom-1 left-0 w-full h-[1.5px] bg-brand/0 group-hover:bg-brand transition-all duration-300"></span>

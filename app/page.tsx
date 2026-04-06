@@ -68,11 +68,16 @@ export default function Home() {
 
 
 
+  const initFetched = useRef(false);
+
   // Initial load
   useEffect(() => {
-    checkSession();
-    verifyPromoDay().then(setIsPromoActive);
-    checkSiteStatus();
+    if (!initFetched.current) {
+      initFetched.current = true;
+      checkSession();
+      verifyPromoDay().then(setIsPromoActive);
+      checkSiteStatus();
+    }
 
     // Auth listener
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
