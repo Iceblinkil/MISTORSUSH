@@ -40,6 +40,7 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isPromoActive, setIsPromoActive] = useState(false);
   const [isSiteDisabled, setIsSiteDisabled] = useState(false);
+  const [isSiteDisabledModalDismissed, setIsSiteDisabledModalDismissed] = useState(false);
   const [isAccessibilityOpen, setIsAccessibilityOpen] = useState(false);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,6 +207,7 @@ export default function Home() {
           onOpenAuth={() => currentUser ? setIsProfileOpen(true) : setIsAuthOpen(true)}
           isLoggedIn={!!currentUser}
           isAdmin={isAdmin(currentUser?.email)}
+          isSiteDisabled={isSiteDisabled}
         />
         <CategoryNav
           categories={menuData}
@@ -314,37 +316,53 @@ export default function Home() {
         onClose={() => setLightboxImage(null)}
       />
 
-      {isSiteDisabled && (
+      {isSiteDisabled && !isSiteDisabledModalDismissed && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-fade-in bg-black/60 backdrop-blur-sm pointer-events-auto">
           <div className="bg-dark border border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 text-center flex flex-col items-center relative overflow-hidden">
+            <button 
+              onClick={() => setIsSiteDisabledModalDismissed(true)}
+              className="absolute top-4 right-4 md:top-6 md:right-6 text-white/50 hover:text-white transition-colors z-20 p-2 rounded-full hover:bg-white/5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 blur-[50px] rounded-full" />
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-inner bg-amber-500/10 text-amber-500 border border-amber-500/20 relative z-10 animate-pulse">
               ⏳
             </div>
-            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight mb-4 relative z-10">
-              {lang === 'ru' ? (
+            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight mb-4 relative z-10" dir={lang === 'he' ? 'rtl' : 'ltr'}>
+              {lang === 'he' ? (
+                <>מכינים באהבה, אבל כרגע —<br /><span className="text-amber-500">אנחנו מטפלים בעומס!</span></>
+              ) : lang === 'ru' ? (
                 <>Готовим с любовью, но сейчас —<br /><span className="text-amber-500">очень стараемся успеть!</span></>
               ) : (
                 <>Cooking with love, but right now —<br /><span className="text-amber-500">we're working at full capacity!</span></>
               )}
             </h2>
             <div className="w-16 h-1.5 bg-amber-500 rounded-full mb-6 relative z-10" />
-            <div className="space-y-4 text-white/80 font-medium leading-relaxed text-sm relative z-10">
+            <div className="space-y-4 text-white/80 font-medium leading-relaxed text-sm relative z-10" dir={lang === 'he' ? 'rtl' : 'ltr'}>
               <p>
-                {lang === 'ru'
+                {lang === 'he'
+                  ? "חברים, קיבלנו המון הזמנות ואנחנו רוצים שכל אחת מהן תהיה מושלמת. כדי לשמור על האיכות ולא לאכזב אתכם, השעינו זמנית קבלת הזמנות חדשות."
+                  : lang === 'ru'
                   ? "Друзья, мы получили очень много заказов и хотим, чтобы каждый из них был выполнен идеально. Чтобы не подвести вас и сохранить качество, мы временно приостановили прием новых чеков."
                   : "Friends, we've received many orders and want each one to be perfect. To maintain quality and not let you down, we've temporarily paused accepting new orders."}
               </p>
               <p>
-                {lang === 'ru'
+                {lang === 'he'
+                  ? "אנא בקרו אותנו שוב בעוד זמן קצר — נטפל בהזמנות הנוכחיות ונחזור לפעילות בקרוב. מתנצלים על חוסר הנוחות!"
+                  : lang === 'ru'
                   ? "Пожалуйста, загляните к нам чуть позже — мы скоро разберемся с текущими заказами и снова будем в строю. Приносим извинения за неудобства!"
                   : "Please check back a bit later — we'll handle the current queue and be back in action soon. Sorry for the inconvenience!"}
               </p>
             </div>
-            <div className="mt-8 pt-6 border-t border-white/10 w-full relative z-10">
+            <div className="mt-8 pt-6 border-t border-white/10 w-full relative z-10" dir={lang === 'he' ? 'rtl' : 'ltr'}>
               <p className="text-[#25D366] text-[11px] sm:text-xs font-bold flex items-center justify-center gap-2 text-center leading-snug">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                {lang === 'ru'
+                {lang === 'he'
+                  ? "ההזמנה שכבר ביצעתם נמצאת בטיפול ותסופק בזמן"
+                  : lang === 'ru'
                   ? "Ваш уже оформленный заказ в работе и будет доставлен вовремя"
                   : "Your already placed order is being processed and will be delivered on time"}
               </p>

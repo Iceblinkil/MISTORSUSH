@@ -11,9 +11,10 @@ interface HeaderProps {
   onOpenAuth: () => void;
   isLoggedIn: boolean;
   isAdmin?: boolean;
+  isSiteDisabled?: boolean;
 }
 
-export default function Header({ onOpenDrawer, onOpenCart, onOpenAuth, isLoggedIn, isAdmin }: HeaderProps) {
+export default function Header({ onOpenDrawer, onOpenCart, onOpenAuth, isLoggedIn, isAdmin, isSiteDisabled }: HeaderProps) {
   const router = useRouter();
   const { cartCount } = useCart();
   const { lang, toggleLang, t } = useLang();
@@ -97,6 +98,11 @@ export default function Header({ onOpenDrawer, onOpenCart, onOpenAuth, isLoggedI
             {lang === 'ru' ? 'работаем каждый день 12:00 — 23:00' : lang === 'he' ? 'פתוחים כל יום 12:00 — 23:00' : 'Open daily 12:00 — 23:00'}
           </span>
         </div>
+        {isSiteDisabled && (
+          <div className="mt-2 text-[11px] font-bold tracking-wider text-amber-500 uppercase text-center bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
+            {lang === 'ru' ? 'В данный момент невозможно сделать заказ' : lang === 'he' ? 'כרגע לא ניתן לבצע הזמנה' : 'Ordering is currently unavailable'}
+          </div>
+        )}
       </div>
 
       {/* Friday promo banner */}
