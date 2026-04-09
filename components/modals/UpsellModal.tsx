@@ -41,14 +41,12 @@ export default function UpsellModal({ isOpen, onSkip, onGoToCart, suggestions }:
 
   return (
     <div
-      className={`fixed inset-0 z-[55] flex justify-center items-end sm:items-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}
+      className={`fixed inset-0 z-[55] flex justify-center items-end sm:items-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
     >
       <div
-        className={`bg-dark w-full sm:w-[500px] md:w-[700px] lg:w-[940px] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] transform transition-transform duration-300 ${
-          isOpen ? 'translate-y-0 sm:translate-y-0' : 'translate-y-full sm:translate-y-10'
-        }`}
+        className={`bg-dark w-full sm:w-[500px] md:w-[700px] lg:w-[940px] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] transform transition-transform duration-300 ${isOpen ? 'translate-y-0 sm:translate-y-0' : 'translate-y-full sm:translate-y-10'
+          }`}
       >
         <div className="flex justify-between items-center p-4 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2">
@@ -69,7 +67,7 @@ export default function UpsellModal({ isOpen, onSkip, onGoToCart, suggestions }:
                 <div key={item.id} className="upsell-card shrink-0 w-[140px] lg:w-full lg:max-w-[140px] bg-card p-3 rounded-2xl border border-white/5 shadow-lg flex flex-col items-center relative overflow-hidden group snap-center min-h-[160px]">
                   {item.image && (
                     <div className="w-[90px] h-[90px] mb-2 flex items-center justify-center relative bg-white/5 rounded-xl">
-                      <Image src={item.image} alt={item.name} fill className="object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300" />
+                      <Image src={item.image} alt={item.name} fill sizes="90px" className="object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300" />
                     </div>
                   )}
                   <h3 className={`font-bold text-[13px] leading-tight text-center text-white/95 line-clamp-2 min-h-[30px] w-full mb-1 ${!item.image ? 'mt-4' : ''}`}>

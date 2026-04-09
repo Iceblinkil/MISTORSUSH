@@ -4,6 +4,7 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { LangProvider } from '@/context/LangContext';
 import { MenuProvider } from '@/context/MenuContext';
+import { fetchProducts } from '@/lib/supabase-server';
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -27,12 +28,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Fetch products on server for SSR
+  const initialProducts = await fetchProducts();
+
   return (
     <html lang="ru" className="scroll-smooth">
       <body className={`${inter.variable} bg-dark text-white antialiased pb-28`}>
         <LangProvider>
-          <MenuProvider>
+          <MenuProvider initialData={initialProducts}>
             <CartProvider>
               {children}
             </CartProvider>

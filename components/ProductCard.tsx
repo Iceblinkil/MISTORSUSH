@@ -44,6 +44,7 @@ export default function ProductCard({ item, categorySlug, onImageClick }: Produc
             src={imageUrl}
             alt={item.name}
             fill
+            sizes="72px"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>

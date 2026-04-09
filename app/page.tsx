@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useLang } from '@/context/LangContext';
 import { MenuItem, MenuCategory } from '@/lib/menuData';
 import { useMenu } from '@/context/MenuContext';
@@ -65,13 +65,10 @@ export default function Home() {
 
   // Dynamic header height
   const headerRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(320);
-
-
-
+  const [headerHeight, setHeaderHeight] = useState(0);
   const initFetched = useRef(false);
 
-  // Initial load
+  // Initial load (auth, promo, site status only - menu already loaded via SSR)
   useEffect(() => {
     if (!initFetched.current) {
       initFetched.current = true;
@@ -88,14 +85,14 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Measure fixed header height dynamically
-  useEffect(() => {
+  // Measure fixed header height dynamically — useLayoutEffect fires before paint to avoid jump
+  useLayoutEffect(() => {
     if (!headerRef.current) return;
+    setHeaderHeight(headerRef.current.offsetHeight);
     const obs = new ResizeObserver(() => {
       if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight);
     });
     obs.observe(headerRef.current);
-    setHeaderHeight(headerRef.current.offsetHeight);
     return () => obs.disconnect();
   }, []);
 
@@ -241,6 +238,7 @@ export default function Home() {
             <MenuSection
               key={menuData[activeCategoryIndex].slug}
               category={menuData[activeCategoryIndex]}
+              showTitle={false}
               onImageClick={(url) => setLightboxImage(url)}
             />
           )
@@ -319,7 +317,7 @@ export default function Home() {
       {isSiteDisabled && !isSiteDisabledModalDismissed && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-fade-in bg-black/60 backdrop-blur-sm pointer-events-auto">
           <div className="bg-dark border border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] w-full max-w-lg rounded-[2.5rem] p-8 md:p-10 text-center flex flex-col items-center relative overflow-hidden">
-            <button 
+            <button
               onClick={() => setIsSiteDisabledModalDismissed(true)}
               className="absolute top-4 right-4 md:top-6 md:right-6 text-white/50 hover:text-white transition-colors z-20 p-2 rounded-full hover:bg-white/5"
             >
@@ -346,15 +344,15 @@ export default function Home() {
                 {lang === 'he'
                   ? "חברים, קיבלנו המון הזמנות ואנחנו רוצים שכל אחת מהן תהיה מושלמת. כדי לשמור על האיכות ולא לאכזב אתכם, השעינו זמנית קבלת הזמנות חדשות."
                   : lang === 'ru'
-                  ? "Друзья, мы получили очень много заказов и хотим, чтобы каждый из них был выполнен идеально. Чтобы не подвести вас и сохранить качество, мы временно приостановили прием новых чеков."
-                  : "Friends, we've received many orders and want each one to be perfect. To maintain quality and not let you down, we've temporarily paused accepting new orders."}
+                    ? "Друзья, мы получили очень много заказов и хотим, чтобы каждый из них был выполнен идеально. Чтобы не подвести вас и сохранить качество, мы временно приостановили прием новых чеков."
+                    : "Friends, we've received many orders and want each one to be perfect. To maintain quality and not let you down, we've temporarily paused accepting new orders."}
               </p>
               <p>
                 {lang === 'he'
                   ? "אנא בקרו אותנו שוב בעוד זמן קצר — נטפל בהזמנות הנוכחיות ונחזור לפעילות בקרוב. מתנצלים על חוסר הנוחות!"
                   : lang === 'ru'
-                  ? "Пожалуйста, загляните к нам чуть позже — мы скоро разберемся с текущими заказами и снова будем в строю. Приносим извинения за неудобства!"
-                  : "Please check back a bit later — we'll handle the current queue and be back in action soon. Sorry for the inconvenience!"}
+                    ? "Пожалуйста, загляните к нам чуть позже — мы скоро разберемся с текущими заказами и снова будем в строю. Приносим извинения за неудобства!"
+                    : "Please check back a bit later — we'll handle the current queue and be back in action soon. Sorry for the inconvenience!"}
               </p>
             </div>
             <div className="mt-8 pt-6 border-t border-white/10 w-full relative z-10" dir={lang === 'he' ? 'rtl' : 'ltr'}>
@@ -363,8 +361,8 @@ export default function Home() {
                 {lang === 'he'
                   ? "ההזמנה שכבר ביצעתם נמצאת בטיפול ותסופק בזמן"
                   : lang === 'ru'
-                  ? "Ваш уже оформленный заказ в работе и будет доставлен вовремя"
-                  : "Your already placed order is being processed and will be delivered on time"}
+                    ? "Ваш уже оформленный заказ в работе и будет доставлен вовремя"
+                    : "Your already placed order is being processed and will be delivered on time"}
               </p>
             </div>
           </div>

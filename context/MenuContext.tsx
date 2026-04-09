@@ -3,63 +3,82 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { sb } from '@/lib/supabase';
 import { MenuCategory, menuCategories } from '@/lib/menuData';
+import { SupabaseProduct } from '@/lib/supabase-server';
 
-interface MenuContextType {
+export interface MenuContextType {
   menuData: MenuCategory[];
   loading: boolean;
+  refetchMenu: () => Promise<void>;
 }
 
-const MenuContext = createContext<MenuContextType>({ menuData: [], loading: true });
+const MenuContext = createContext<MenuContextType>({ menuData: [], loading: true, refetchMenu: async () => { } });
 
 export const useMenu = () => useContext(MenuContext);
 
-export const MenuProvider = ({ children }: { children: React.ReactNode }) => {
-  const [menuData, setMenuData] = useState<MenuCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+/**
+ * Transform raw Supabase products into MenuCategory structure
+ */
+function transformProductsToMenu(products: SupabaseProduct[]): MenuCategory[] {
+  const liveCategories: MenuCategory[] = menuCategories.map(cat => ({
+    ...cat,
+    items: []
+  }));
 
-  useEffect(() => {
-    async function fetchLiveMenu() {
-      const { data, error } = await sb.from('products').select('*').neq('category', 'system_config');
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-
-      // Initialize all categories with empty items array
-      const liveCategories: MenuCategory[] = menuCategories.map(cat => ({
-        ...cat,
-        items: []
-      }));
-
-      data.forEach(p => {
-        let catObj = liveCategories.find(c => c.slug === p.category);
-        if (!catObj) {
-          catObj = { category: p.category, categoryEn: p.category, slug: p.category, items: [] };
-          liveCategories.push(catObj);
-        }
-
-        if (p.is_available) {
-          catObj.items.push({
-            id: String(p.id),
-            name: p.name,
-            nameEn: p.name_en || '',
-            nameHe: p.name_he || '',
-            price: p.price,
-            ingredients: p.ingredients || '',
-            ingredientsEn: p.ingredients_en || '',
-            ingredientsHe: p.ingredients_he || '',
-            image: p.image_url,
-            is_available: p.is_available
-          });
-        }
-      });
-
-      setMenuData(liveCategories.filter(c => c.items.length > 0));
-      setLoading(false);
+  products.forEach(p => {
+    let catObj = liveCategories.find(c => c.slug === p.category);
+    if (!catObj) {
+      catObj = { category: p.category, categoryEn: p.category, slug: p.category, items: [] };
+      liveCategories.push(catObj);
     }
 
-    fetchLiveMenu();
-  }, []);
+    if (p.is_available) {
+      catObj.items.push({
+        id: String(p.id),
+        name: p.name,
+        nameEn: p.name_en || '',
+        nameHe: p.name_he || '',
+        price: p.price,
+        ingredients: p.ingredients || '',
+        ingredientsEn: p.ingredients_en || '',
+        ingredientsHe: p.ingredients_he || '',
+        image: p.image_url,
+        is_available: p.is_available
+      });
+    }
+  });
 
-  return <MenuContext.Provider value={{ menuData, loading }}>{children}</MenuContext.Provider>;
+  return liveCategories.filter(c => c.items.length > 0);
+}
+
+export const MenuProvider = ({
+  children,
+  initialData
+}: {
+  children: React.ReactNode;
+  initialData?: SupabaseProduct[];
+}) => {
+  const [menuData, setMenuData] = useState<MenuCategory[]>(() => {
+    // Initialize from server data if provided
+    if (initialData && initialData.length > 0) {
+      return transformProductsToMenu(initialData);
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    // If we have initial data, we're not loading
+    return !initialData || initialData.length === 0;
+  });
+
+  const refetchMenu = async () => {
+    setLoading(true);
+    const { data, error } = await sb.from('products').select('*').neq('category', 'system_config');
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
+    setMenuData(transformProductsToMenu(data));
+    setLoading(false);
+  };
+
+  return <MenuContext.Provider value={{ menuData, loading, refetchMenu }}>{children}</MenuContext.Provider>;
 };

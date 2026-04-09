@@ -310,7 +310,7 @@ export default function AdminPage() {
 
       const { data, error } = await sb.storage
         .from('product-images')
-        .upload(filePath, compressedFile, { cacheControl: '3600', upsert: false });
+        .upload(filePath, compressedFile, { cacheControl: '31536000', upsert: false });
 
       if (error) throw error;
 
@@ -917,8 +917,8 @@ export default function AdminPage() {
                                       <button
                                         onClick={() => toggleProductAvailability(product)}
                                         className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 ${product.is_available
-                                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
-                                            : 'bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20'
+                                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
+                                          : 'bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20'
                                           }`}
                                       >
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">

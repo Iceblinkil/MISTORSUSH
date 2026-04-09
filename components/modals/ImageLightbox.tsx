@@ -11,9 +11,8 @@ interface ImageLightboxProps {
 export default function ImageLightbox({ isOpen, imageUrl, onClose }: ImageLightboxProps) {
   return (
     <div
-      className={`fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl transition-all duration-300 flex items-center justify-center p-4 ${
-        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}
+      className={`fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl transition-all duration-300 flex items-center justify-center p-4 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
     >
       <button
         onClick={onClose}
@@ -26,15 +25,15 @@ export default function ImageLightbox({ isOpen, imageUrl, onClose }: ImageLightb
 
       {imageUrl && (
         <div
-          className={`relative max-w-2xl w-full max-h-[80vh] aspect-square transform transition-all duration-300 ${
-            isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-10'
-          }`}
+          className={`relative max-w-2xl w-full max-h-[80vh] aspect-square transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-10'
+            }`}
           onClick={onClose}
         >
           <Image
             src={imageUrl}
             alt="Product"
             fill
+            sizes="(max-width: 768px) 100vw, 672px"
             className="object-contain drop-shadow-2xl"
           />
         </div>
